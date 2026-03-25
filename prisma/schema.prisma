@@ -13,42 +13,77 @@ enum Role {
 }
 
 enum PackageStatus {
-  RECEIVED_BY_SECURITY // Paket baru sampai di pos satpam
-  DELIVERED_TO_WARGA   // Paket sudah diambil oleh warga
+  RECEIVED_BY_SECURITY
+  DELIVERED_TO_WARGA
 }
 
+// --- MODEL USER YANG DIPERBARUI ---
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String
-  role      Role      @default(WARGA)
-  unitNumber String?  // Nomor rumah/apartemen (Misal: A-12)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  // Relasi: Warga bisa memiliki banyak paket
-  packages  Package[] @relation("WargaPackages")
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? // Dibutuhkan oleh NextAuth
+  image         String?   // Dibutuhkan oleh NextAuth (untuk foto profil)
+  password      String?   // Tambahan dari kita untuk login manual (email/password)
   
-  // Relasi: Security bisa mencatat banyak paket
+  role          Role      @default(WARGA)
+  unitNumber    String?
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relasi NextAuth
+  accounts      Account[]
+  sessions      Session[]
+
+  // Relasi Aplikasi Kita
+  packages         Package[] @relation("WargaPackages")
   recordedPackages Package[] @relation("SecurityRecordedPackages")
 }
 
+// --- TABEL WAJIB NEXTAUTH ---
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// --- MODEL PACKAGE (TETAP SAMA) ---
 model Package {
   id             String        @id @default(uuid())
-  trackingNumber String?       // Nomor resi (opsional)
-  courierName    String        // Nama kurir (JNE, SiCepat, GoSend, dll)
-  recipientName  String        // Nama penerima di paket (jaga-jaga jika bukan nama akun)
-  unitNumber     String        // Nomor rumah/apartemen tujuan
+  trackingNumber String?
+  courierName    String
+  recipientName  String
+  unitNumber     String
   status         PackageStatus @default(RECEIVED_BY_SECURITY)
   
-  // Waktu pencatatan
   receivedAt     DateTime      @default(now())
-  pickedUpAt     DateTime?     // Nullable, diisi saat warga mengambil paket
+  pickedUpAt     DateTime?
 
-  // Foreign Keys & Relations
-  wargaId        String?       // ID Warga (bisa null jika warga belum terdaftar, tapi paket datang)
+  wargaId        String?
   warga          User?         @relation("WargaPackages", fields: [wargaId], references: [id])
 
-  securityId     String        // ID Security yang mencatat kedatangan paket
+  securityId     String
   security       User          @relation("SecurityRecordedPackages", fields: [securityId], references: [id])
 }
