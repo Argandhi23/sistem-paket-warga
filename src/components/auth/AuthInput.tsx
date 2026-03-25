@@ -1,4 +1,4 @@
-import { type LucideIcon, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 type AuthInputProps = {
   id: string;
@@ -10,7 +10,6 @@ type AuthInputProps = {
   error?: string;
   onChange: (value: string) => void;
   onBlur: () => void;
-  icon?: LucideIcon;
 };
 
 export function AuthInput({
@@ -23,7 +22,6 @@ export function AuthInput({
   error,
   onChange,
   onBlur,
-  icon: Icon,
 }: AuthInputProps) {
   const describedBy = error ? `${id}-error` : undefined;
 

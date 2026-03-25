@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { Mail, PackageCheck, ShieldCheck, TimerReset, UserRoundCheck } from "lucide-react";
+import { SyntheticEvent, useMemo, useState } from "react";
+import { PackageCheck, ShieldCheck, TimerReset, UserRoundCheck } from "lucide-react";
 import { AuthActions } from "@/components/auth/AuthActions";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthInput } from "@/components/auth/AuthInput";
@@ -55,7 +55,7 @@ export default function LoginPage() {
     return errors[field];
   };
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitted(true);
 
@@ -108,7 +108,6 @@ export default function LoginPage() {
               placeholder="nama@perumahan.id"
               required
               error={visibleError("email")}
-              icon={Mail}
               onChange={(value) => setFields((previous) => ({ ...previous, email: value }))}
               onBlur={() => setTouched((previous) => ({ ...previous, email: true }))}
             />
