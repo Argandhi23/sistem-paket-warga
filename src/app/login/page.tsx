@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { Mail, PackageCheck, ShieldCheck, TimerReset, UserRoundCheck } from "lucide-react";
 import { AuthActions } from "@/components/auth/AuthActions";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthInput } from "@/components/auth/AuthInput";
@@ -76,10 +77,22 @@ export default function LoginPage() {
             melalui CRUD user oleh admin perumahan.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 text-xs text-blue-100">
-            <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-3">Tracking Paket</div>
-            <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-3">Validasi Keamanan</div>
-            <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-3">Riwayat Penerimaan</div>
-            <div className="rounded-xl border border-white/20 bg-white/10 px-3 py-3">Kontrol Akses Role</div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+              <PackageCheck className="h-4 w-4" aria-hidden="true" />
+              Tracking Paket
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              Validasi Keamanan
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+              <TimerReset className="h-4 w-4" aria-hidden="true" />
+              Riwayat Penerimaan
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+              <UserRoundCheck className="h-4 w-4" aria-hidden="true" />
+              Kontrol Akses Role
+            </div>
           </div>
         </div>
       </div>
@@ -95,6 +108,7 @@ export default function LoginPage() {
               placeholder="nama@perumahan.id"
               required
               error={visibleError("email")}
+              icon={Mail}
               onChange={(value) => setFields((previous) => ({ ...previous, email: value }))}
               onBlur={() => setTouched((previous) => ({ ...previous, email: true }))}
             />
