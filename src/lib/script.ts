@@ -5,7 +5,7 @@
 import { randomInt } from "node:crypto";
 import { prisma } from "./prisma";
 
-let num = randomInt(20000);
+const num = randomInt(20000);
 
 async function main() {
   const user = await prisma.user.create({
