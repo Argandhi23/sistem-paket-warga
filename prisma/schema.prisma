@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  SECURITY
+  WARGA
+}
+
+enum PackageStatus {
+  RECEIVED_BY_SECURITY // Paket baru sampai di pos satpam
+  DELIVERED_TO_WARGA   // Paket sudah diambil oleh warga
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  role      Role      @default(WARGA)
+  unitNumber String?  // Nomor rumah/apartemen (Misal: A-12)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relasi: Warga bisa memiliki banyak paket
+  packages  Package[] @relation("WargaPackages")
+  
+  // Relasi: Security bisa mencatat banyak paket
+  recordedPackages Package[] @relation("SecurityRecordedPackages")
+}
+
+model Package {
+  id             String        @id @default(uuid())
+  trackingNumber String?       // Nomor resi (opsional)
+  courierName    String        // Nama kurir (JNE, SiCepat, GoSend, dll)
+  recipientName  String        // Nama penerima di paket (jaga-jaga jika bukan nama akun)
+  unitNumber     String        // Nomor rumah/apartemen tujuan
+  status         PackageStatus @default(RECEIVED_BY_SECURITY)
+  
+  // Waktu pencatatan
+  receivedAt     DateTime      @default(now())
+  pickedUpAt     DateTime?     // Nullable, diisi saat warga mengambil paket
+
+  // Foreign Keys & Relations
+  wargaId        String?       // ID Warga (bisa null jika warga belum terdaftar, tapi paket datang)
+  warga          User?         @relation("WargaPackages", fields: [wargaId], references: [id])
+
+  securityId     String        // ID Security yang mencatat kedatangan paket
+  security       User          @relation("SecurityRecordedPackages", fields: [securityId], references: [id])
+}
