@@ -1,4 +1,4 @@
-import { BellDot, SquareCheckBig } from "lucide-react";
+import { BellDot } from "lucide-react";
 
 type AuthActionsProps = {
   rememberMe: boolean;
@@ -14,7 +14,6 @@ export function AuthActions({
   return (
     <div className="flex items-center justify-between gap-4">
       <label className="inline-flex items-center gap-2 text-sm text-slate-700">
-        <SquareCheckBig className="h-4 w-4 text-slate-500" aria-hidden="true" />
         <input
           type="checkbox"
           checked={rememberMe}

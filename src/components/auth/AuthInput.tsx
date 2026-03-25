@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import { type LucideIcon, Mail } from "lucide-react";
 
 type AuthInputProps = {
   id: string;
@@ -44,11 +44,9 @@ export function AuthInput({
           required={required}
           aria-invalid={error ? "true" : "false"}
           aria-describedby={describedBy}
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pl-11 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
         />
-        {Icon ? (
-          <Icon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-        ) : null}
+        <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
       </div>
       {error ? (
         <p id={`${id}-error`} className="text-sm text-rose-600">
