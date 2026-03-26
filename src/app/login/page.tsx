@@ -1,6 +1,6 @@
 "use client";
 
-import { SyntheticEvent, useMemo, useState } from "react";
+import { SyntheticEvent, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { PackageCheck, ShieldCheck, TimerReset, UserRoundCheck } from "lucide-react";
 import { AuthActions } from "@/components/auth/AuthActions";
@@ -43,9 +43,25 @@ export default function LoginPage() {
     password: false,
   });
   const [submitted, setSubmitted] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const hasSensitiveQuery = url.searchParams.has("email") || url.searchParams.has("password");
+
+    if (!hasSensitiveQuery) {
+      return;
+    }
+
+    url.searchParams.delete("email");
+    url.searchParams.delete("password");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+
+    setStatusMessage(
+      "Terdeteksi kredensial pada URL dan sudah dibersihkan otomatis demi keamanan.",
+    );
+  }, []);
 
   const errors = useMemo(() => getFieldErrors(fields), [fields]);
 
@@ -155,11 +171,7 @@ export default function LoginPage() {
               onBlur={() => setTouched((previous) => ({ ...previous, password: true }))}
             />
 
-            <AuthActions
-              rememberMe={rememberMe}
-              onRememberMeChange={setRememberMe}
-              onForgotPasswordClick={() => setStatusMessage("Not implemented yet")}
-            />
+            <AuthActions onForgotPasswordClick={() => setStatusMessage("Not implemented yet")} />
 
             <button
               type="submit"
