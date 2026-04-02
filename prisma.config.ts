@@ -7,6 +7,7 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: 'npx ts-node prisma/seed.ts',
   },
   datasource: {
     // Ubah dari DATABASE_URL menjadi DIRECT_URL khusus untuk migrasi Supabase

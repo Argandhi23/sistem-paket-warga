@@ -2,7 +2,17 @@ import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
-const connectionString = `${process.env.DATABASE_URL}`;
+// 1. Ambil URL database (prioritaskan DIRECT_URL jika ada)
+let connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || '';
+
+// 2. TRIK SUPABASE: Paksa ganti port dari Pooler (6543) ke Direct (5432)
+if (connectionString.includes(':6543')) {
+  connectionString = connectionString.replace(':6543', ':5432');
+}
+
+// Hapus parameter pgbouncer jika ada, karena kita memakai port direct
+connectionString = connectionString.replace('?pgbouncer=true', '');
+connectionString = connectionString.replace('&pgbouncer=true', '');
 
 const pool = new Pool({ connectionString });
 

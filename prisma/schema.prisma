@@ -29,6 +29,10 @@ model User {
   role          Role      @default(WARGA)
   unitNumber    String?
   
+  // 🌟 TAMBAHAN BARU UNTUK TIKET JIRA: Relasi User ke Rumah
+  rumahId       String?   // Foreign key penghubung ke tabel Rumah
+  rumah         Rumah?    @relation(fields: [rumahId], references: [id])
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -39,6 +43,19 @@ model User {
   // Relasi Aplikasi Kita
   packages         Package[] @relation("WargaPackages")
   recordedPackages Package[] @relation("SecurityRecordedPackages")
+}
+
+// 🌟 TABEL BARU UNTUK TIKET JIRA: RUMAH
+model Rumah {
+  id        String   @id @default(uuid())
+  blok      String   // Contoh: "Blok A"
+  nomor     String   // Contoh: "12"
+  
+  // Relasi: 1 Rumah bisa dihuni banyak User
+  penghuni  User[]   
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // --- TABEL WAJIB NEXTAUTH ---
@@ -86,4 +103,37 @@ model Package {
 
   securityId     String
   security       User          @relation("SecurityRecordedPackages", fields: [securityId], references: [id])
+}
+
+// --- Tabel Warga ---
+model Warga {
+  id        String   @id @default(uuid())
+  nama      String
+  blokRumah String   // Contoh: "Blok A No. 12"
+  noHp      String?  // Boleh kosong
+  paket     Paket[]  // Relasi: 1 Warga bisa punya banyak Paket
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- Status Paket ---
+enum StatusPaket {
+  PENDING   // Paket baru datang, belum diambil
+  DIAMBIL   // Paket sudah diambil oleh warga
+}
+
+// --- Tabel Paket ---
+model Paket {
+  id             String      @id @default(uuid())
+  resi           String?     // Nomor resi (boleh kosong kalau kurir tidak kasih resi)
+  kurir          String      // Contoh: JNE, J&T, Shopee Express, Gojek
+  status         StatusPaket @default(PENDING)
+  
+  // Relasi ke tabel Warga
+  penerimaId     String
+  penerima       Warga       @relation(fields: [penerimaId], references: [id], onDelete: Cascade)
+  
+  tanggalMasuk   DateTime    @default(now())
+  tanggalDiambil DateTime?   // Akan diisi saat status berubah jadi DIAMBIL
 }
