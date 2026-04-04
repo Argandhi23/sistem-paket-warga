@@ -40,19 +40,19 @@ export default function TambahWargaPage() {
 
       {/* Konten Utama */}
       <main className="flex-1 p-6 md:p-8">
-        <header className="mb-6 md:mb-8 space-y-3">
-          <Link
-            href="/admin/warga"
-            className="inline-flex items-center text-sm font-medium text-blue-600 transition-colors hover:text-blue-800"
-          >
-            &larr; Kembali ke Data Warga
-          </Link>
+        <header className="mb-6 md:mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-gray-800">Tambah Akun Warga Baru</h1>
             <p className="text-sm text-gray-600">
               Isi data akun warga agar pengguna dapat login dan terhubung dengan proses pencatatan paket.
             </p>
           </div>
+          <Link
+            href="/admin/warga"
+            className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+          >
+            &larr; Kembali ke Data Warga
+          </Link>
         </header>
 
         <div className="max-w-2xl rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
