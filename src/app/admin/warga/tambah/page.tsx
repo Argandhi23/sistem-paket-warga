@@ -39,31 +39,73 @@ export default function TambahWargaPage() {
       </aside>
 
       {/* Konten Utama */}
-      <main className="flex-1 p-8">
-        <header className="mb-8">
-          <Link href="/admin/warga" className="text-blue-600 hover:text-blue-800 font-medium mb-4 inline-block">&larr; Kembali ke Data Warga</Link>
-          <h1 className="text-3xl font-bold text-gray-800">Tambah Akun Warga Baru</h1>
+      <main className="flex-1 p-6 md:p-8">
+        <header className="mb-6 md:mb-8 space-y-3">
+          <Link
+            href="/admin/warga"
+            className="inline-flex items-center text-sm font-medium text-blue-600 transition-colors hover:text-blue-800"
+          >
+            &larr; Kembali ke Data Warga
+          </Link>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-gray-800">Tambah Akun Warga Baru</h1>
+            <p className="text-sm text-gray-600">
+              Isi data akun warga agar pengguna dapat login dan terhubung dengan proses pencatatan paket.
+            </p>
+          </div>
         </header>
 
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-2xl">
+        <div className="max-w-2xl rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
           <form action={simpanUserWarga} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
-              <input type="text" name="name" required className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Contoh: Budi Santoso" />
+            <div className="space-y-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                placeholder="Contoh: Budi Santoso"
+              />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email (Untuk Login)</label>
-              <input type="email" name="email" required className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Contoh: budi@gmail.com" />
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (Untuk Login)</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                placeholder="Contoh: budi@gmail.com"
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password Sementara</label>
-              <input type="text" name="password" required className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Contoh: warga123" />
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password Sementara</label>
+              <input
+                id="password"
+                type="text"
+                name="password"
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                placeholder="Contoh: warga123"
+              />
+              <p className="text-xs text-gray-500">
+                Berikan kata sandi awal yang mudah dikomunikasikan, lalu minta warga menggantinya setelah login pertama.
+              </p>
             </div>
 
-            <div className="pt-4">
-              <SubmitWargaButton defaultLabel="Buat Akun Warga" pendingLabel="Menyimpan..." />
+            <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <Link
+                href="/admin/warga"
+                className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-800"
+              >
+                Batal
+              </Link>
+              <div className="w-full sm:w-auto sm:min-w-[220px]">
+                <SubmitWargaButton defaultLabel="Buat Akun Warga" pendingLabel="Menyimpan..." />
+              </div>
             </div>
           </form>
         </div>
