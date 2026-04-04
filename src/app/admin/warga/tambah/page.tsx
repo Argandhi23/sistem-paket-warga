@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
+import SubmitWargaButton from '@/components/admin/SubmitWargaButton';
 
 export default function TambahWargaPage() {
   async function simpanUserWarga(formData: FormData) {
@@ -62,7 +63,7 @@ export default function TambahWargaPage() {
             </div>
 
             <div className="pt-4">
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg">Buat Akun Warga</button>
+              <SubmitWargaButton defaultLabel="Buat Akun Warga" pendingLabel="Menyimpan..." />
             </div>
           </form>
         </div>
