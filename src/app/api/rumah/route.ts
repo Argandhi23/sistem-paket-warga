@@ -6,7 +6,7 @@ import { RumahService } from '@/services/rumah.service';
 // GET: Mengambil semua data Rumah beserta daftar penghuninya (Linkage)
 export async function GET() {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
     const daftarRumah = await RumahService.listAll();
     return NextResponse.json({ success: true, data: daftarRumah });
   } catch (error) {
@@ -16,7 +16,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const body = await req.json();
     const rumahBaru = await RumahService.create(body);
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const body = await req.json();
     const rumah = await RumahService.update(body);
@@ -42,7 +42,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

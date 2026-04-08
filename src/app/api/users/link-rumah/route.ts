@@ -6,7 +6,7 @@ import { requireAdminSession } from '@/lib/require-admin-session';
 // UI Mintanya PUT, jadi kita ganti jadi PUT
 export async function PUT(request: Request) { 
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const body = await request.json();
     const data = await UserService.linkToRumah(body);

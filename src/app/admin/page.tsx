@@ -1,52 +1,87 @@
-'use client';
+import { Home, Package, ShieldCheck, Users } from 'lucide-react';
+import AppSidebar from '@/components/shell/AppSidebar';
+import AppTopbar from '@/components/shell/AppTopbar';
+import { shellConfigs } from '@/components/shell/nav-config';
+import LogoutButton from '@/components/admin/LogoutButton';
+import { requireAdminSession } from '@/lib/require-admin-session';
 
-import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+export default async function AdminDashboard() {
+  await requireAdminSession();
 
-export default function AdminDashboard() {
+  const shellConfig = shellConfigs.ADMIN;
+
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* --- Sidebar Kiri --- */}
-      <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-blue-600">📦 PaketWarga</h2>
-        </div>
-        <nav className="p-4 space-y-2">
-          <Link href="/admin" className="block p-3 bg-blue-50 text-blue-700 font-medium rounded-lg">
-            🏠 Dashboard Admin
-          </Link>
-          <Link href="/admin/warga" className="block p-3 text-gray-600 hover:bg-gray-50 hover:text-blue-600 rounded-lg transition-colors">
-            👥 Data Warga
-          </Link>
-          <Link href="/admin/paket" className="block p-3 text-gray-600 hover:bg-gray-50 hover:text-blue-600 rounded-lg transition-colors">
-            📬 Paket Masuk
-          </Link>
-        </nav>
-      </aside>
+    <div className="min-h-screen bg-[#dce6f2] text-[#2f3f56]">
+      <div className="flex min-h-screen flex-col lg:flex-row">
+        <AppSidebar config={shellConfig} active="dashboard" />
 
-      {/* --- Konten Utama Kanan --- */}
-      <main className="flex-1 p-8">
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard Admin</h1>
-          <button 
-            onClick={() => signOut({ callbackUrl: '/login' })} 
-            className="bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-5 py-2.5 rounded-lg border border-red-200 transition-colors"
-          >
-            Keluar (Logout)
-          </button>
-        </header>
+        <main className="flex-1 p-[1.1rem] md:p-[1.5rem] lg:p-[1.75rem]">
+          <AppTopbar config={shellConfig} title="Budi Santoso" />
 
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-xl font-semibold text-gray-800 mb-3">
-            Selamat Datang, Super Admin! 👋
-          </h3>
-          <p className="text-gray-600 leading-relaxed">
-            Database sudah berhasil terhubung. Saat ini aplikasi siap dikembangkan. 
-            Mulai dengan menambahkan data warga agar sistem dapat mengenali penerima paket, 
-            lalu gunakan menu Paket Masuk untuk mencatat setiap barang yang dititipkan oleh kurir.
-          </p>
-        </div>
-      </main>
+          <section className="mt-4 rounded-2xl border border-blue-100 bg-[#eaf1f9] p-3 md:p-6">
+            <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#6f84a0]">Dashboard</p>
+                <h1 className="mt-1 text-[1.75rem] font-bold tracking-tight text-[#16293f] md:text-[2.25rem]">
+                  Ringkasan Admin
+                </h1>
+                <p className="mt-1 text-[0.95rem] text-[#637995] md:text-[1.05rem]">
+                  Kelola data warga, pantau aktivitas paket, dan jaga konsistensi operasional harian.
+                </p>
+              </div>
+
+              <LogoutButton />
+            </header>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <article className="rounded-2xl border border-[#c8d8ea] bg-[#d8e4f2] p-4">
+                <div className="flex items-center gap-2 text-[#2f5e9f]">
+                  <Users size={18} />
+                  <p className="text-sm font-bold uppercase tracking-[0.08em]">Data Warga</p>
+                </div>
+                <p className="mt-2 text-[1.75rem] font-bold text-[#223a58] md:text-[2rem]">128</p>
+                <p className="text-sm text-[#5c7390]">Akun aktif terdaftar</p>
+              </article>
+
+              <article className="rounded-2xl border border-[#d8d0c0] bg-[#e9e1d4] p-4">
+                <div className="flex items-center gap-2 text-[#8f5e12]">
+                  <Package size={18} />
+                  <p className="text-sm font-bold uppercase tracking-[0.08em]">Paket Masuk</p>
+                </div>
+                <p className="mt-2 text-[1.75rem] font-bold text-[#4f4026] md:text-[2rem]">24</p>
+                <p className="text-sm text-[#6f6554]">Belum diambil hari ini</p>
+              </article>
+
+              <article className="rounded-2xl border border-[#cfdbc3] bg-[#e3ecd8] p-4">
+                <div className="flex items-center gap-2 text-[#4d7a37]">
+                  <Home size={18} />
+                  <p className="text-sm font-bold uppercase tracking-[0.08em]">Unit Terpetakan</p>
+                </div>
+                <p className="mt-2 text-[1.75rem] font-bold text-[#2e4f28] md:text-[2rem]">87%</p>
+                <p className="text-sm text-[#597257]">Sinkron dengan data rumah</p>
+              </article>
+
+              <article className="rounded-2xl border border-[#decfd2] bg-[#efe2e4] p-4">
+                <div className="flex items-center gap-2 text-[#a23b33]">
+                  <ShieldCheck size={18} />
+                  <p className="text-sm font-bold uppercase tracking-[0.08em]">Audit</p>
+                </div>
+                <p className="mt-2 text-[1.75rem] font-bold text-[#5e2f2a] md:text-[2rem]">Baik</p>
+                <p className="text-sm text-[#786469]">Tidak ada anomali akses</p>
+              </article>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-[#d3deec] bg-[#edf3fa] p-4 md:p-6">
+              <h2 className="text-xl font-bold text-[#1f324b] md:text-2xl">Selamat Datang, Super Admin</h2>
+              <p className="mt-2 text-sm leading-relaxed text-[#5a7290] md:text-base">
+                Gunakan menu Data Pengguna untuk menambah akun warga baru, lalu lanjutkan dengan Log Paket untuk
+                pencatatan paket harian. Dashboard ini dirancang agar proses operasional lebih cepat dipantau dari satu
+                layar.
+              </p>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }

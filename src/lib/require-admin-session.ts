@@ -1,22 +1,34 @@
 import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { ApiError } from "@/lib/custom-error";
 
-export async function requireAdminSession() {
-  // Ambil sesi login saat ini
+type RequireAdminSessionOptions = {
+  api?: boolean;
+  redirectTo?: string;
+};
+
+export async function requireAdminSession(options?: RequireAdminSessionOptions) {
+  const isApiRequest = options?.api ?? false;
+  const redirectTo = options?.redirectTo ?? '/login';
   const session = await getServerSession(authOptions);
 
-  // 1. Cek apakah user sudah login
   if (!session || !session.user) {
-    throw new ApiError(401, "Unauthorized: Anda harus login untuk mengakses ini");
+    if (isApiRequest) {
+      throw new ApiError(401, "Unauthorized: Anda harus login untuk mengakses ini");
+    }
+
+    redirect(redirectTo);
   }
 
-  // 2. Cek apakah role user adalah ADMIN
-  // Kita gunakan tipe 'any' sementara jika interface tipe NextAuth belum di-extend
   const userRole = session.user.role;
-  
+
   if (userRole !== "ADMIN") {
-    throw new ApiError(403, "Forbidden: Akses ditolak. Hanya ADMIN yang diizinkan melakukan aksi ini");
+    if (isApiRequest) {
+      throw new ApiError(403, "Forbidden: Akses ditolak. Hanya ADMIN yang diizinkan melakukan aksi ini");
+    }
+
+    redirect(redirectTo);
   }
 
   return session;

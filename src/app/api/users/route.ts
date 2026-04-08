@@ -5,7 +5,7 @@ import { UserService } from '@/services/user.service';
 
 export async function GET(request: Request) {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const body = await request.json();
     const user = await UserService.createForAdmin(body);
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const body = await request.json();
     const user = await UserService.updateForAdmin(body);
@@ -46,7 +46,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    await requireAdminSession();
+    await requireAdminSession({ api: true });
 
     const { searchParams } = new URL(request.url);
     const idFromQuery = searchParams.get('id');
