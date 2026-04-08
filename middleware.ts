@@ -1,7 +1,8 @@
 import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 
-export default withAuth(
+// 1. Ini adalah logika RBAC (Role-Based Access Control) NextAuth kamu yang lama
+const authMiddleware = withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
@@ -19,17 +20,63 @@ export default withAuth(
   },
   {
     callbacks: {
-      // Halaman di bawah "matcher" hanya bisa diakses kalau fungsi ini mengembalikan true (punya token)
+      // Halaman dilindungi hanya bisa diakses kalau punya token
       authorized: ({ token }) => !!token,
     },
   }
 );
 
-// Tentukan rute mana saja yang HARUS login untuk bisa diakses
+// 2. Ini adalah Middleware Utama yang akan menangkap semua request
+export default function middleware(req: NextRequest, event: NextFetchEvent) {
+  const path = req.nextUrl.pathname;
+  const searchParams = req.nextUrl.searchParams;
+
+  // ==========================================
+  // 🛡️ HARDENING SDPR-67: BLOKIR KREDENSIAL DI GET
+  // ==========================================
+  // Kita hanya targetkan endpoint login/auth agar tidak mengganggu endpoint lain
+  // (misal GET /api/users?email=... buat fitur search tetap aman)
+  const isAuthEndpoint = path.startsWith("/login") || path.startsWith("/api/auth");
+  const hasSensitiveParams = searchParams.has("email") || searchParams.has("password");
+
+  if (req.method === "GET" && isAuthEndpoint && hasSensitiveParams) {
+    // Kembalikan error 400 Bad Request, putus koneksi saat itu juga!
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: "Security Violation: Pengiriman email dan password dilarang menggunakan metode GET." 
+      },
+      { status: 400 }
+    );
+  }
+
+  // ==========================================
+  // 🔐 DELEGASI KE NEXTAUTH UNTUK ROUTE TERLINDUNGI
+  // ==========================================
+  const isProtectedRoute = 
+    path.startsWith("/admin") || 
+    path.startsWith("/security") || 
+    path.startsWith("/warga");
+  
+  if (isProtectedRoute) {
+    // Kita panggil withAuth dengan teknik 'as any' karena perbedaan tipe data Next.js
+    return (authMiddleware as any)(req, event);
+  }
+
+  // Jika bukan halaman auth yang melanggar, dan bukan halaman protected, biarkan lewat
+  return NextResponse.next();
+}
+
+// 3. Konfigurasi Matcher
 export const config = {
   matcher: [
-    "/admin/:path*", 
-    "/security/:path*", 
-    "/warga/:path*"
+    /*
+     * Match semua request paths kecuali:
+     * - _next/static (file statis)
+     * - _next/image (optimasi gambar)
+     * - favicon.ico (icon)
+     * Ini memastikan middleware kita berjalan untuk /login dan /api/auth juga!
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ]
 };

@@ -2,6 +2,16 @@ import prisma from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
 export class PackageRepository {
+  // ---> INI FUNGSI BARU YANG KITA TAMBAHKAN UNTUK ADMIN & SECURITY <---
+  static async findAll() {
+    return await prisma.package.findMany({
+      orderBy: { receivedAt: 'desc' },
+      include: {
+        security: { select: { name: true } }, // Biar Admin juga bisa lihat siapa satpam penerimanya
+      }
+    });
+  }
+
   // Fungsi untuk mencatat paket baru masuk
   static async create(data: Prisma.PackageUncheckedCreateInput) {
     return await prisma.package.create({

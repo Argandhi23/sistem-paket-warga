@@ -3,10 +3,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Adapter } from "next-auth/adapters"; // <-- TAMBAHKAN BARIS INI
+import { Adapter } from "next-auth/adapters";
+// 🛡️ Import fungsi rate limiter yang baru kita buat
+import { isRateLimited, recordFailedAttempt, clearRateLimit } from "@/lib/rate-limit";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as Adapter, // <-- UBAH MENJADI SEPERTI INI
+  adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
   },
@@ -17,7 +19,17 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email", placeholder: "email@contoh.com" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      // Tambahkan 'req' sebagai parameter kedua untuk mendapatkan informasi IP
+      async authorize(credentials, req) {
+        // Ambil IP address pengguna (Biasanya disediakan oleh header Next.js / Vercel)
+        const forwardedFor = req?.headers?.["x-forwarded-for"];
+        const ip = typeof forwardedFor === "string" ? forwardedFor.split(",")[0] : "unknown_ip";
+
+        // 🛡️ HARDENING SDPR-67: Cek apakah IP sedang di-banned
+        if (isRateLimited(ip)) {
+          throw new Error("Terlalu banyak percobaan gagal. Silakan coba lagi dalam 15 menit.");
+        }
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email dan password wajib diisi");
         }
@@ -26,15 +38,22 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email }
         });
 
+        // 🛡️ Anti-Enumeration + Record Kegagalan
         if (!user || !user.password) {
-          throw new Error("Email tidak terdaftar atau password salah");
+          recordFailedAttempt(ip); // Catat IP gagal
+          throw new Error("Kredensial tidak valid");
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
+        // 🛡️ Anti-Enumeration + Record Kegagalan
         if (!isPasswordValid) {
-          throw new Error("Password salah");
+          recordFailedAttempt(ip); // Catat IP gagal
+          throw new Error("Kredensial tidak valid");
         }
+
+        // 🛡️ Jika berhasil login, bersihkan catatan kegagalannya
+        clearRateLimit(ip);
 
         return {
           id: user.id,
