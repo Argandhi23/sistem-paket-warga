@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { Pencil, Trash2 } from 'lucide-react';
 import prisma from '@/lib/prisma';
-import AdminSidebar from '@/components/admin/AdminSidebar';
-import AdminTopbar from '@/components/admin/AdminTopbar';
+import AppSidebar from '@/components/shell/AppSidebar';
+import AppTopbar from '@/components/shell/AppTopbar';
+import { shellConfigs } from '@/components/shell/nav-config';
 import { requireAdminSession } from '@/lib/require-admin-session';
+import WargaManagementTable from '@/components/admin/WargaManagementTable';
 
 type WargaPageProps = {
   searchParams?: Promise<{ role?: string; sort?: string }>;
@@ -36,15 +37,10 @@ function sortLink(sort: 'terbaru' | 'lama', role: 'SEMUA' | 'WARGA' | 'SATPAM') 
   return `/admin/warga?role=${role}&sort=${sort}`;
 }
 
-function initials(name: string | null, email: string | null) {
-  const seed = (name || email || 'U').trim();
-  const parts = seed.split(' ').filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
-}
-
 export default async function WargaPage({ searchParams }: WargaPageProps) {
   await requireAdminSession();
+
+  const shellConfig = shellConfigs.ADMIN;
 
   const params = (await searchParams) ?? {};
   const activeRole = normalizeRole(params.role);
@@ -61,10 +57,10 @@ export default async function WargaPage({ searchParams }: WargaPageProps) {
   return (
     <div className="min-h-screen bg-[#dce6f2] text-[#2f3f56]">
       <div className="flex min-h-screen flex-col lg:flex-row">
-        <AdminSidebar active="warga" />
+        <AppSidebar config={shellConfig} active="warga" />
 
         <main className="flex-1 p-[1.1rem] md:p-[1.5rem] lg:p-[1.75rem]">
-          <AdminTopbar title="Budi Santoso" />
+          <AppTopbar config={shellConfig} title="Budi Santoso" />
 
           <section className="mt-4 rounded-2xl border border-blue-100 bg-[#eaf1f9] p-3 md:p-6">
             <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -134,77 +130,7 @@ export default async function WargaPage({ searchParams }: WargaPageProps) {
               </div>
             </div>
 
-            <div className="mt-4 overflow-x-auto rounded-2xl border border-[#cfdceb] bg-[#edf3fa]">
-              <table className="min-w-[980px] w-full text-left">
-                <thead className="sticky top-0 z-[1] bg-[#e8f0f9] text-xs uppercase tracking-[0.12em] text-[#6e849f]">
-                  <tr className="border-b border-[#d6e1ef]">
-                    <th scope="col" className="px-6 py-4 font-semibold">Nama Pengguna</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Unit / Rumah</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">No. Whatsapp</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Peran</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Status Akun</th>
-                    <th scope="col" className="px-6 py-4 font-semibold text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {daftarWarga.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center">
-                        <p className="text-lg font-semibold text-[#2b3f59]">Belum ada akun warga.</p>
-                        <p className="mt-1 text-sm text-[#6d829d]">Tambahkan pengguna baru untuk memulai manajemen akun.</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    daftarWarga.map((warga: (typeof daftarWarga)[number]) => (
-                      <tr key={warga.id} className="border-b border-[#d6e1ef] text-[#2f3f56] last:border-b-0">
-                        <td className="px-6 py-3.5 md:py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex size-10 items-center justify-center rounded-full bg-[#cad9eb] text-sm font-bold text-[#2c4f7a]">
-                              {initials(warga.name ?? null, warga.email ?? null)}
-                            </div>
-                            <div>
-                              <p className="text-[1.03rem] font-semibold leading-tight text-[#1f324b] md:text-[1.2rem]">{warga.name || '-'}</p>
-                              <p className="text-[0.86rem] text-[#7086a0] md:text-[0.95rem]">{warga.email || '-'}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-3.5 text-[1.1rem] font-medium leading-tight text-[#2a3e57] md:py-4 md:text-[1.3rem]">
-                          {warga.rumah ? `${warga.rumah.blok} - ${warga.rumah.nomor}` : '-'}
-                        </td>
-                        <td className="px-6 py-3.5 text-[1.1rem] text-[#4f6683] md:py-4 md:text-[1.3rem]">-</td>
-                        <td className="px-6 py-3.5 md:py-4">
-                          {warga.role === 'SECURITY' ? (
-                            <span className="inline-flex rounded-full bg-[#ead8bf] px-3 py-1 text-sm font-bold uppercase tracking-[0.08em] text-[#8f5e12]">
-                              SATPAM
-                            </span>
-                          ) : (
-                            <span className="inline-flex rounded-full bg-[#c6dbef] px-3 py-1 text-sm font-bold uppercase tracking-[0.08em] text-[#2c5fa6]">
-                              WARGA
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-3.5 md:py-4">
-                          <span className="inline-flex items-center gap-2 text-[1rem] font-medium text-[#324861] md:text-[1.15rem]">
-                            <span className="size-2.5 rounded-full bg-[#4caf78]" />
-                            Aktif
-                          </span>
-                        </td>
-                        <td className="px-6 py-3.5 md:py-4">
-                          <div className="flex items-center justify-end gap-3 text-[#778ca7]">
-                            <button type="button" className="rounded p-1 hover:bg-[#dbe7f5]" aria-label="Edit pengguna">
-                              <Pencil size={16} />
-                            </button>
-                            <button type="button" className="rounded p-1 hover:bg-[#dbe7f5]" aria-label="Hapus pengguna">
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <WargaManagementTable rows={daftarWarga} activeRole={activeRole} activeSort={activeSort} />
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <article className="rounded-2xl border border-[#c8d8ea] bg-[#d8e4f2] p-4">

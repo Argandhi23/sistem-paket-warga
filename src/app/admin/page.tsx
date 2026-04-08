@@ -1,19 +1,22 @@
 import { Home, Package, ShieldCheck, Users } from 'lucide-react';
-import AdminSidebar from '@/components/admin/AdminSidebar';
-import AdminTopbar from '@/components/admin/AdminTopbar';
+import AppSidebar from '@/components/shell/AppSidebar';
+import AppTopbar from '@/components/shell/AppTopbar';
+import { shellConfigs } from '@/components/shell/nav-config';
 import LogoutButton from '@/components/admin/LogoutButton';
 import { requireAdminSession } from '@/lib/require-admin-session';
 
 export default async function AdminDashboard() {
   await requireAdminSession();
 
+  const shellConfig = shellConfigs.ADMIN;
+
   return (
     <div className="min-h-screen bg-[#dce6f2] text-[#2f3f56]">
       <div className="flex min-h-screen flex-col lg:flex-row">
-        <AdminSidebar active="dashboard" />
+        <AppSidebar config={shellConfig} active="dashboard" />
 
         <main className="flex-1 p-[1.1rem] md:p-[1.5rem] lg:p-[1.75rem]">
-          <AdminTopbar title="Budi Santoso" />
+          <AppTopbar config={shellConfig} title="Budi Santoso" />
 
           <section className="mt-4 rounded-2xl border border-blue-100 bg-[#eaf1f9] p-3 md:p-6">
             <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
