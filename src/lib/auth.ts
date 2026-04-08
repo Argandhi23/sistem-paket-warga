@@ -3,12 +3,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { Adapter } from "next-auth/adapters"; // <-- TAMBAHKAN BARIS INI
 
 export const authOptions: NextAuthOptions = {
-  // Menghubungkan NextAuth dengan Prisma
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma) as Adapter, // <-- UBAH MENJADI SEPERTI INI
   session: {
-    strategy: "jwt", // Kita pakai JWT karena menggunakan Credentials (email/password)
+    strategy: "jwt",
   },
   providers: [
     CredentialsProvider({
@@ -22,7 +22,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email dan password wajib diisi");
         }
 
-        // Cari user di database
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });
@@ -31,14 +30,12 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email tidak terdaftar atau password salah");
         }
 
-        // Cek kecocokan password
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isPasswordValid) {
           throw new Error("Password salah");
         }
 
-        // Kembalikan data user untuk disimpan di sesi
         return {
           id: user.id,
           email: user.email,
@@ -50,7 +47,6 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    // Menyimpan data ke dalam token JWT
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -59,7 +55,6 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    // Menyalin data dari token JWT ke Sesi yang bisa diakses Frontend
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;

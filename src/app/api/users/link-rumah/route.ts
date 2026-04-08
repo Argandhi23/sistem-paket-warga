@@ -1,30 +1,22 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { NextResponse } from 'next/server';
+import { UserService } from '@/services/user.service';
+import { handleError } from '@/lib/error-handler';
+import { requireAdminSession } from '@/lib/require-admin-session';
 
-// PUT: Menghubungkan User ke Rumah (Linkage)
-export async function PUT(req: Request) {
+// UI Mintanya PUT, jadi kita ganti jadi PUT
+export async function PUT(request: Request) { 
   try {
-    const body = await req.json();
-    const { userId, rumahId } = body;
+    await requireAdminSession({ api: true });
 
-    if (!userId || !rumahId) {
-      return NextResponse.json({ success: false, message: "userId dan rumahId wajib diisi" }, { status: 400 });
-    }
-
-    // Update User dengan rumahId yang baru
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { rumahId: rumahId },
-      // Include untuk memastikan relasinya berhasil ditarik
-      include: { rumah: true }
-    });
+    const body = await request.json();
+    const data = await UserService.linkToRumah(body);
 
     return NextResponse.json({ 
       success: true, 
       message: "User berhasil dihubungkan ke Rumah",
-      data: updatedUser 
-    });
+      data 
+    }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ success: false, message: "Gagal menghubungkan user ke rumah" }, { status: 500 });
+    return handleError(error);
   }
 }
