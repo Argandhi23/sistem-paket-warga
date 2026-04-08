@@ -9,9 +9,7 @@ export async function PUT(request: Request) {
     await requireAdminSession();
 
     const body = await request.json();
-    const { userId, rumahId } = body;
-
-    const data = await UserService.linkUserToRumah({ userId, rumahId });
+    const data = await UserService.linkToRumah(body);
 
     return NextResponse.json({ 
       success: true, 
