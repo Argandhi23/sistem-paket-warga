@@ -23,6 +23,7 @@ type EditDraft = {
   name: string;
   email: string;
   role: string;
+  unitNumber: string;
 };
 
 function initials(name: string | null, email: string | null) {
@@ -80,7 +81,20 @@ export default function WargaManagementTable({ rows, activeRole, activeSort }: W
       name: user.name ?? '',
       email: user.email ?? '',
       role: user.role,
+      unitNumber: user.rumah ? `${user.rumah.blok}-${user.rumah.nomor}` : '',
     });
+  }
+
+  function resolveErrorMessage(payload: unknown, fallback: string) {
+    if (!payload || typeof payload !== 'object') return fallback;
+
+    const error = (payload as { error?: unknown }).error;
+    if (typeof error === 'string' && error.trim()) return error;
+
+    const message = (payload as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) return message;
+
+    return fallback;
   }
 
   async function submitEditPreview() {
@@ -102,6 +116,7 @@ export default function WargaManagementTable({ rows, activeRole, activeSort }: W
           name: editDraft.name.trim(),
           email: editDraft.email.trim(),
           role: editDraft.role,
+          unitNumber: editDraft.unitNumber.trim() || null,
         }),
       });
 
@@ -111,10 +126,10 @@ export default function WargaManagementTable({ rows, activeRole, activeSort }: W
         await loadUsersFromApi();
         router.refresh();
       } else {
-        setStatusMessage('Endpoint update user belum siap dari backend. UI sudah siap dipakai.');
+        setStatusMessage(resolveErrorMessage(payload, 'Gagal memperbarui data pengguna.'));
       }
     } catch {
-      setStatusMessage('Endpoint update user belum siap dari backend. UI sudah siap dipakai.');
+      setStatusMessage('Gagal memperbarui data pengguna. Periksa koneksi atau endpoint API.');
     }
 
     setEditDraft(null);
@@ -143,10 +158,10 @@ export default function WargaManagementTable({ rows, activeRole, activeSort }: W
         await loadUsersFromApi();
         router.refresh();
       } else {
-        setStatusMessage('Endpoint hapus user belum siap dari backend. UI konfirmasi sudah siap dipakai.');
+        setStatusMessage(resolveErrorMessage(payload, 'Gagal menghapus pengguna.'));
       }
     } catch {
-      setStatusMessage('Endpoint hapus user belum siap dari backend. UI konfirmasi sudah siap dipakai.');
+      setStatusMessage('Gagal menghapus pengguna. Periksa koneksi atau endpoint API.');
     }
 
     setDeleteTarget(null);
@@ -304,6 +319,16 @@ export default function WargaManagementTable({ rows, activeRole, activeSort }: W
                     className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-3 py-2.5 text-sm text-[#5f728a]"
                   />
                 </div>
+              </div>
+
+              <div>
+                <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#7c8da3]">Nomor Unit (Opsional)</p>
+                <input
+                  value={editDraft.unitNumber}
+                  onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, unitNumber: event.target.value } : prev))}
+                  placeholder="Contoh: A-12"
+                  className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-3 py-2.5 text-sm outline-none"
+                />
               </div>
             </div>
 

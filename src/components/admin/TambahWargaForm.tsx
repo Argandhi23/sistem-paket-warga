@@ -8,17 +8,35 @@ export default function TambahWargaForm() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<'WARGA' | 'SECURITY'>('WARGA');
-  const [status, setStatus] = useState('Aktif');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'WARGA' | 'SATPAM'>('WARGA');
+  const [unitNumber, setUnitNumber] = useState('');
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+
+  function resolveErrorMessage(payload: unknown, fallback: string) {
+    if (!payload || typeof payload !== 'object') return fallback;
+
+    const error = (payload as { error?: unknown }).error;
+    if (typeof error === 'string' && error.trim()) return error;
+
+    const msg = (payload as { message?: unknown }).message;
+    if (typeof msg === 'string' && msg.trim()) return msg;
+
+    return fallback;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage('');
 
-    if (!name.trim() || !email.trim()) {
-      setMessage('Nama dan email wajib diisi.');
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      setMessage('Nama, email, dan password wajib diisi.');
+      return;
+    }
+
+    if (password.length < 8) {
+      setMessage('Password minimal 8 karakter.');
       return;
     }
 
@@ -30,14 +48,15 @@ export default function TambahWargaForm() {
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
-          role,
-          status,
+          password,
+          role: role === 'SATPAM' ? 'SECURITY' : 'WARGA',
+          unitNumber: unitNumber.trim() || null,
         }),
       });
 
       const payload = await response.json().catch(() => null);
       if (!response.ok || payload?.success === false) {
-        setMessage('Gagal menambahkan pengguna. Cek kesiapan endpoint API user.');
+        setMessage(resolveErrorMessage(payload, 'Gagal menambahkan pengguna.'));
         setSaving(false);
         return;
       }
@@ -45,7 +64,7 @@ export default function TambahWargaForm() {
       router.push('/admin/warga');
       router.refresh();
     } catch {
-      setMessage('Gagal menambahkan pengguna. Cek kesiapan endpoint API user.');
+      setMessage('Gagal menambahkan pengguna. Periksa koneksi atau endpoint API.');
     }
     setSaving(false);
   }
@@ -92,25 +111,42 @@ export default function TambahWargaForm() {
           <select
             id="role"
             value={role}
-            onChange={(event) => setRole(event.target.value === 'SECURITY' ? 'SECURITY' : 'WARGA')}
+            onChange={(event) => setRole(event.target.value === 'SATPAM' ? 'SATPAM' : 'WARGA')}
             className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
           >
             <option value="WARGA">WARGA</option>
-            <option value="SECURITY">SATPAM</option>
+            <option value="SATPAM">SATPAM</option>
           </select>
         </div>
 
         <div>
-          <label htmlFor="status" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
-            Status Akun
+          <label htmlFor="unitNumber" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
+            Nomor Unit (Opsional)
           </label>
           <input
-            id="status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
+            id="unitNumber"
+            value={unitNumber}
+            onChange={(event) => setUnitNumber(event.target.value)}
+            placeholder="Contoh: A-12"
             className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
           />
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="password" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
+          Password Awal
+        </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+          minLength={8}
+          placeholder="Minimal 8 karakter"
+          className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] placeholder:text-[#91a4bb] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
+        />
       </div>
 
       <p className="min-h-5 text-sm text-[#5e7591]">{message}</p>
