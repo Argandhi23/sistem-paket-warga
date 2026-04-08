@@ -11,9 +11,11 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const data = await UserService.linkToRumah(body);
 
+    const isUnmapped = body?.rumahId === null;
+
     return NextResponse.json({ 
       success: true, 
-      message: "User berhasil dihubungkan ke Rumah",
+      message: isUnmapped ? "Pemetaan rumah pengguna berhasil dibatalkan" : "User berhasil dihubungkan ke Rumah",
       data 
     }, { status: 200 });
   } catch (error) {

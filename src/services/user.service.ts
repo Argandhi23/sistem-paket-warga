@@ -168,10 +168,9 @@ export class UserService {
 
   static async linkToRumah(payload: { userId?: unknown; rumahId?: unknown }) {
     const userId = typeof payload.userId === 'string' ? payload.userId.trim() : '';
-    const rumahId = typeof payload.rumahId === 'string' ? payload.rumahId.trim() : '';
 
-    if (!userId || !rumahId) {
-      throw new ApiError(400, 'userId dan rumahId wajib diisi');
+    if (!userId) {
+      throw new ApiError(400, 'userId wajib diisi');
     }
 
     const user = await UserRepository.findById(userId);
@@ -181,6 +180,15 @@ export class UserService {
 
     if (user.role !== Role.WARGA) {
       throw new ApiError(400, 'hanya user role WARGA yang dapat ditautkan ke rumah');
+    }
+
+    if (payload.rumahId === null) {
+      return UserRepository.linkToRumah(userId, null);
+    }
+
+    const rumahId = typeof payload.rumahId === 'string' ? payload.rumahId.trim() : '';
+    if (!rumahId) {
+      throw new ApiError(400, 'rumahId wajib diisi');
     }
 
     const rumah = await RumahRepository.findById(rumahId);
