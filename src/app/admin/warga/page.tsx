@@ -4,7 +4,7 @@ import AppSidebar from '@/components/shell/AppSidebar';
 import AppTopbar from '@/components/shell/AppTopbar';
 import { shellConfigs } from '@/components/shell/nav-config';
 import { requireAdminSession } from '@/lib/require-admin-session';
-import WargaManagementTable from '@/components/admin/WargaManagementTable';
+import UserManagementTable from '@/components/admin/UserManagementTable';
 
 type WargaPageProps = {
   searchParams?: Promise<{ role?: string; sort?: string }>;
@@ -130,7 +130,7 @@ export default async function WargaPage({ searchParams }: WargaPageProps) {
               </div>
             </div>
 
-            <WargaManagementTable rows={daftarWarga} activeRole={activeRole} activeSort={activeSort} />
+            <UserManagementTable rows={daftarWarga} activeRole={activeRole} activeSort={activeSort} />
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <article className="rounded-2xl border border-[#c8d8ea] bg-[#d8e4f2] p-4">

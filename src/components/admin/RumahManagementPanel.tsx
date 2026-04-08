@@ -65,10 +65,22 @@ export default function RumahManagementPanel() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const availableWarga = useMemo(() => {
-    if (!rumahDraft.id) return warga;
-    return warga.filter((u) => !u.rumahId || u.rumahId === rumahDraft.id);
-  }, [warga, rumahDraft.id]);
+  function resolveErrorMessage(payload: unknown, fallback: string) {
+    if (!payload || typeof payload !== 'object') return fallback;
+
+    const error = (payload as { error?: unknown }).error;
+    if (typeof error === 'string' && error.trim()) return error;
+
+    const message = (payload as { message?: unknown }).message;
+    if (typeof message === 'string' && message.trim()) return message;
+
+    return fallback;
+  }
+
+  const availableWarga = useMemo(
+    () => warga.filter((u) => !u.rumahId || u.rumahId === rumahDraft.id),
+    [warga, rumahDraft.id],
+  );
 
   const filteredRumah = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -165,14 +177,38 @@ export default function RumahManagementPanel() {
       const result = await response.json().catch(() => null);
 
       if (!response.ok || result?.success === false) {
-        setStatus('Simpan data rumah belum berhasil. Endpoint backend mungkin belum siap.');
+        setStatus(resolveErrorMessage(result, 'Simpan data rumah belum berhasil.'));
         setSaving(false);
         return;
       }
 
       const rumahId = result?.data?.id ?? rumahDraft.id;
 
-      if (rumahDraft.userId && rumahId) {
+      if (rumahId && rumahDraft.id && rumahDraft.penghuniAktif.length > 0) {
+        const unmapPromises = rumahDraft.penghuniAktif
+          .filter((item) => item.id !== rumahDraft.userId)
+          .map((item) =>
+            fetch('/api/users/link-rumah', {
+              method: 'PUT',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ userId: item.id, rumahId: null }),
+            }),
+          );
+
+        if (unmapPromises.length > 0) {
+          const unmapResults = await Promise.all(unmapPromises);
+          const hasFailedUnmap = unmapResults.some((response) => !response.ok);
+          if (hasFailedUnmap) {
+            setStatus('Data rumah tersimpan, tetapi pembaruan pemetaan penghuni lama belum berhasil.');
+            setRumahModalOpen(false);
+            await refreshData();
+            setSaving(false);
+            return;
+          }
+        }
+      }
+
+      if (rumahId && rumahDraft.userId) {
         const linkResponse = await fetch('/api/users/link-rumah', {
           method: 'PUT',
           headers: { 'content-type': 'application/json' },
@@ -180,7 +216,7 @@ export default function RumahManagementPanel() {
         });
         const linkResult = await linkResponse.json().catch(() => null);
         if (!linkResponse.ok || linkResult?.success === false) {
-          setStatus('Data rumah tersimpan, tapi pemetaan warga belum berhasil.');
+          setStatus(resolveErrorMessage(linkResult, 'Data rumah tersimpan, tapi pemetaan warga belum berhasil.'));
           setRumahModalOpen(false);
           await refreshData();
           setSaving(false);
@@ -192,7 +228,7 @@ export default function RumahManagementPanel() {
       setRumahModalOpen(false);
       await refreshData();
     } catch {
-      setStatus('Simpan data rumah belum berhasil. Endpoint backend mungkin belum siap.');
+      setStatus('Simpan data rumah belum berhasil. Periksa koneksi atau endpoint API.');
     }
 
     setSaving(false);
@@ -208,7 +244,7 @@ export default function RumahManagementPanel() {
       const result = await response.json().catch(() => null);
 
       if (!response.ok || result?.success === false) {
-        setStatus('Hapus rumah belum berhasil. Endpoint backend mungkin belum siap.');
+        setStatus(resolveErrorMessage(result, 'Hapus rumah belum berhasil.'));
         setDeleting(false);
         return;
       }
@@ -217,7 +253,7 @@ export default function RumahManagementPanel() {
       setStatus('Data rumah berhasil dihapus.');
       await refreshData();
     } catch {
-      setStatus('Hapus rumah belum berhasil. Endpoint backend mungkin belum siap.');
+      setStatus('Hapus rumah belum berhasil. Periksa koneksi atau endpoint API.');
     }
     setDeleting(false);
   }
@@ -408,7 +444,7 @@ export default function RumahManagementPanel() {
                     onChange={(event) => setRumahDraft((prev) => ({ ...prev, userId: event.target.value }))}
                     className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] py-2.5 pl-10 pr-3 text-sm outline-none"
                   >
-                    <option value="">Pilih warga (opsional)</option>
+                    <option value="">Tanpa penghuni / batalkan pemetaan</option>
                     {availableWarga.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.name ?? '-'} ({item.email ?? '-'})

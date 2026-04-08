@@ -4,16 +4,17 @@ import { Mail, Pencil, ShieldCheck, Trash2, User2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type WargaItem = {
+type UserItem = {
   id: string;
   name: string | null;
   email: string | null;
   role: 'WARGA' | 'SECURITY' | string;
+  unitNumber?: string | null;
   rumah: { blok: string; nomor: string } | null;
 };
 
-type WargaManagementTableProps = {
-  rows: WargaItem[];
+type UserManagementTableProps = {
+  rows: UserItem[];
   activeRole: 'SEMUA' | 'WARGA' | 'SATPAM';
   activeSort: 'terbaru' | 'lama';
 };
@@ -33,14 +34,14 @@ function initials(name: string | null, email: string | null) {
   return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
 }
 
-export default function WargaManagementTable({ rows, activeRole, activeSort }: WargaManagementTableProps) {
+export default function UserManagementTable({ rows, activeRole, activeSort }: UserManagementTableProps) {
   const router = useRouter();
   const [statusMessage, setStatusMessage] = useState('');
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<WargaItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UserItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [tableRows, setTableRows] = useState<WargaItem[]>(rows);
+  const [tableRows, setTableRows] = useState<UserItem[]>(rows);
 
   const loadUsersFromApi = useCallback(async () => {
     const params = new URLSearchParams();
@@ -74,7 +75,7 @@ export default function WargaManagementTable({ rows, activeRole, activeSort }: W
 
   const emptyState = useMemo(() => tableRows.length === 0, [tableRows.length]);
 
-  function openEdit(user: WargaItem) {
+  function openEdit(user: UserItem) {
     setStatusMessage('');
     setEditDraft({
       id: user.id,
@@ -205,7 +206,7 @@ export default function WargaManagementTable({ rows, activeRole, activeSort }: W
                     </div>
                   </td>
                   <td className="px-6 py-3.5 text-[1.1rem] font-medium leading-tight text-[#2a3e57] md:py-4 md:text-[1.3rem]">
-                    {warga.rumah ? `${warga.rumah.blok} - ${warga.rumah.nomor}` : '-'}
+                    {warga.rumah ? `${warga.rumah.blok} - ${warga.rumah.nomor}` : warga.unitNumber || '-'}
                   </td>
                   <td className="px-6 py-3.5 text-[1.1rem] text-[#4f6683] md:py-4 md:text-[1.3rem]">-</td>
                   <td className="px-6 py-3.5 md:py-4">
