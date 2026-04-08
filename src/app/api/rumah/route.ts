@@ -1,35 +1,29 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { RumahService } from "@/services/rumah.service";
+import { handleError } from "@/lib/error-handler";
+// Pastikan path import ini sesuai dengan file buatan Randy
+import { requireAdminSession } from "@/lib/require-admin-session"; 
 
-// GET: Mengambil semua data Rumah beserta daftar penghuninya (Linkage)
 export async function GET() {
   try {
-    const daftarRumah = await prisma.rumah.findMany({
-      include: {
-        penghuni: {
-          select: { id: true, name: true, email: true, role: true } // Jangan tampilkan password!
-        }
-      },
-      orderBy: { blok: 'asc' }
-    });
-    return NextResponse.json({ success: true, data: daftarRumah });
+    await requireAdminSession(); // Aktifkan guard ini
+
+    const data = await RumahService.getAllRumah();
+    return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ success: false, message: "Gagal mengambil data" }, { status: 500 });
+    return handleError(error);
   }
 }
 
-// POST: Membuat data Rumah baru
 export async function POST(req: Request) {
   try {
+    await requireAdminSession(); // Aktifkan guard ini
+
     const body = await req.json();
-    const { blok, nomor } = body;
+    const data = await RumahService.createRumah(body);
 
-    const rumahBaru = await prisma.rumah.create({
-      data: { blok, nomor }
-    });
-
-    return NextResponse.json({ success: true, data: rumahBaru }, { status: 201 });
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ success: false, message: "Gagal membuat rumah" }, { status: 500 });
+    return handleError(error);
   }
 }

@@ -1,26 +1,30 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { handleError } from '@/lib/error-handler'; // <-- 1. Import handler-nya
+import { UserService } from '@/services/user.service';
+import { handleError } from '@/lib/error-handler';
+import { requireAdminSession } from "@/lib/require-admin-session";
+
+export async function GET() {
+  try {
+    await requireAdminSession(); 
+    
+    const data = await UserService.getWargaAndSecurity();
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return handleError(error);
+  }
+}
 
 export async function POST(request: Request) {
   try {
+    await requireAdminSession();
+
     const body = await request.json();
     
-    // Simpan user ke database
-    const user = await prisma.user.create({
-      data: {
-        name: body.name,
-        email: body.email,
-        role: body.role,
-        unitNumber: body.unitNumber,
-      }
-    });
+    // Logic hash password ditaruh di Service jika diperlukan
+    const data = await UserService.createUser(body);
 
-    // <-- 2. Format response sukses agar seragam (ada success & data)
-    return NextResponse.json({ success: true, data: user }, { status: 201 });
-    
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
-    // <-- 3. Lempar error ke Global Error Handler (tidak perlu ': any' lagi)
     return handleError(error);
   }
 }
