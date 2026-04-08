@@ -5,10 +5,17 @@ export class RumahRepository {
     return prisma.rumah.findMany({
       include: {
         penghuni: {
-          select: { id: true, name: true, email: true, role: true, unitNumber: true }
-        }
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
       },
-      orderBy: { blok: 'asc' }
+      orderBy: {
+        blok: 'asc',
+      },
     });
   }
 

@@ -1,18 +1,26 @@
 import prisma from '@/lib/prisma';
-import { Prisma, Role } from '@prisma/client'; // <-- Tambahkan Role di sini
+import { Prisma, Role } from '@prisma/client';
 
 export class UserRepository {
-  static async findWargaAndSecurity(roleFilter?: string | null, sort?: string | null) {
-    // Menyiapkan filter Role dengan tipe Prisma.EnumRoleFilter agar TypeScript aman
-    const roleCondition: Prisma.EnumRoleFilter = roleFilter 
-      ? { equals: roleFilter.toUpperCase() as Role } 
-      : { in: [Role.WARGA, Role.SECURITY] };
+  static async findForManagement(params?: { role?: Role; sortOrder?: 'asc' | 'desc' }) {
+    const where: Prisma.UserWhereInput = params?.role
+      ? { role: params.role }
+      : { role: { in: [Role.WARGA, Role.SECURITY] } };
 
     return prisma.user.findMany({
-      where: { role: roleCondition },
-      include: { rumah: true },
-      // Jika sort 'desc', urutkan dari yang terbaru, default 'asc'
-      orderBy: { createdAt: sort === 'desc' ? 'desc' : 'asc' } 
+      where,
+      include: {
+        rumah: {
+          select: {
+            id: true,
+            blok: true,
+            nomor: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: params?.sortOrder ?? 'desc',
+      },
     });
   }
 
@@ -20,6 +28,9 @@ export class UserRepository {
     return prisma.user.findUnique({ where: { id } });
   }
 
+  static async findByEmail(email: string) {
+    return prisma.user.findUnique({ where: { email } });
+  }
   static async create(data: Prisma.UserCreateInput) {
     return prisma.user.create({ data });
   }
@@ -35,7 +46,16 @@ export class UserRepository {
   static async linkToRumah(userId: string, rumahId: string) {
     return prisma.user.update({
       where: { id: userId },
-      data: { rumahId: rumahId }
+      data: { rumahId },
+      include: {
+        rumah: {
+          select: {
+            id: true,
+            blok: true,
+            nomor: true,
+          },
+        },
+      },
     });
   }
 }
