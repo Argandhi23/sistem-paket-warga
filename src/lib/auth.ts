@@ -1,11 +1,12 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { Adapter } from "next-auth/adapters";
-// 🛡️ Import fungsi rate limiter yang baru kita buat
-import { isRateLimited, recordFailedAttempt, clearRateLimit } from "@/lib/rate-limit";
+
+// ✅ FIX: Gunakan relative path (./) alih-alih alias (@/lib/)
+import prisma from "./prisma";
+import { isRateLimited, recordFailedAttempt, clearRateLimit } from "./rate-limit";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
