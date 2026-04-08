@@ -3,16 +3,14 @@ import { UserService } from '@/services/user.service';
 import { handleError } from '@/lib/error-handler';
 import { requireAdminSession } from '@/lib/require-admin-session';
 
-
-export async function POST(request: Request) { // Randy menggunakan POST di catatan commitnya
+// UI Mintanya PUT, jadi kita ganti jadi PUT
+export async function PUT(request: Request) { 
   try {
-    // Panggil Guard: Pastikan yang nge-hit API ini cuma ADMIN
     await requireAdminSession();
 
     const body = await request.json();
     const { userId, rumahId } = body;
 
-    // Panggil Service untuk logic dan akses database
     const data = await UserService.linkUserToRumah({ userId, rumahId });
 
     return NextResponse.json({ 
@@ -21,7 +19,6 @@ export async function POST(request: Request) { // Randy menggunakan POST di cata
       data 
     }, { status: 200 });
   } catch (error) {
-    // Kalau ada error (misal user bukan admin, atau userId kosong), lari ke sini
     return handleError(error);
   }
 }

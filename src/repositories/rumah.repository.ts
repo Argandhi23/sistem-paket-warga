@@ -19,4 +19,12 @@ export class RumahRepository {
   static async create(data: { blok: string; nomor: string }) {
     return prisma.rumah.create({ data });
   }
+
+  static async update(id: string, data: { blok?: string; nomor?: string }) {
+    return prisma.rumah.update({ where: { id }, data });
+  }
+
+  static async delete(id: string) {
+    return prisma.rumah.delete({ where: { id } });
+  }
 }
