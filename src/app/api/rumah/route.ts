@@ -4,10 +4,17 @@ import { requireAdminSession } from "@/lib/require-admin-session";
 import { RumahService } from '@/services/rumah.service';
 
 // GET: Mengambil semua data Rumah beserta daftar penghuninya (Linkage)
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    await requireAdminSession({ api: true });
-    const daftarRumah = await RumahService.listAll();
+    // ⚠️ PERHATIAN: Pastikan helper ini mengizinkan Role.SECURITY jika Satpam butuh akses
+    await requireAdminSession({ api: true }); 
+
+    // Ambil parameter pencarian dari URL, misalnya: /api/rumah?q=A
+    const { searchParams } = new URL(req.url);
+    const searchQuery = searchParams.get('q') || searchParams.get('search') || undefined;
+
+    const daftarRumah = await RumahService.listAll(searchQuery);
+    
     return NextResponse.json({ success: true, data: daftarRumah });
   } catch (error) {
     return handleError(error);

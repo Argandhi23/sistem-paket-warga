@@ -1,8 +1,19 @@
 import prisma from '@/lib/prisma';
 
 export class RumahRepository {
-  static async findAll() {
+  static async findAll(searchQuery?: string) {
+    // Siapkan kondisi WHERE jika ada kata kunci pencarian
+    const whereClause = searchQuery
+      ? {
+          OR: [
+            { blok: { contains: searchQuery, mode: 'insensitive' as const } },
+            { nomor: { contains: searchQuery, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
+
     return prisma.rumah.findMany({
+      where: whereClause,
       include: {
         penghuni: {
           select: {
@@ -13,9 +24,10 @@ export class RumahRepository {
           },
         },
       },
-      orderBy: {
-        blok: 'asc',
-      },
+      orderBy: [
+        { blok: 'asc' },
+        { nomor: 'asc' } // Tambahan: urutkan nomor juga agar lebih rapi di UI Satpam
+      ],
     });
   }
 

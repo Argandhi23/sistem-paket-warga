@@ -7,8 +7,14 @@ function normalizeText(value: unknown) {
 }
 
 export class RumahService {
-  static async listAll() {
-    return RumahRepository.findAll();
+  static async listAll(searchQuery?: string) {
+    // Sanitasi: pastikan tipe datanya string dan hapus spasi berlebih
+    const sanitizedQuery = typeof searchQuery === 'string' ? searchQuery.trim() : undefined;
+    
+    // Jika string kosong setelah di-trim, jadikan undefined agar Prisma menampilkan semua
+    const finalQuery = sanitizedQuery !== '' ? sanitizedQuery : undefined;
+    
+    return RumahRepository.findAll(finalQuery);
   }
 
   static async create(payload: { blok?: unknown; nomor?: unknown }) {
