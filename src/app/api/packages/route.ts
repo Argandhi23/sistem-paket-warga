@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const requestedUnit = searchParams.get('unit');
+    const requestedUnit = searchParams.get('unitNumber') || searchParams.get('unit');
 
     const userRole = session.user.role;
     const userUnitNumber = session.user.unitNumber;

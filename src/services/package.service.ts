@@ -1,5 +1,6 @@
 import { PackageRepository } from '@/repositories/package.repository';
 import { ApiError } from '@/lib/custom-error';
+import prisma from '@/lib/prisma';
 
 export class PackageService {
   static async receiveNewPackage(payload: {
@@ -9,9 +10,18 @@ export class PackageService {
     securityId: string;
     trackingNumber?: string;
   }) {
-    // Di sini kita bisa tambahkan validasi bisnis
+    // Di sini kita tambahkan validasi bisnis
     if (!payload.unitNumber) {
-      throw new Error('Nomor unit rumah/apartemen wajib diisi');
+      throw new ApiError(400, 'Nomor unit rumah/apartemen wajib diisi');
+    }
+
+    // Validasi: Pastikan unitNumber yang diinput Satpam memang ada di tabel Rumah
+    const rumahExists = await prisma.rumah.findFirst({
+      where: { nomor: payload.unitNumber }
+    });
+
+    if (!rumahExists) {
+      throw new ApiError(400, 'Unit tidak terdaftar');
     }
 
     // Panggil repository untuk simpan ke database
@@ -28,10 +38,17 @@ export class PackageService {
     return newPackage;
   }
 
+  static async processExpiredPackages() {
+    return await PackageRepository.updateExpiredPackages();
+  }
+
   static async listPackagesForWarga(unitNumber: string | null | undefined) {
     if (!unitNumber) {
       throw new ApiError(400, 'User tidak terasosiasi dengan nomor unit rumah manapun');
     }
+
+    // Jalankan sinkronisasi expired juga untuk Warga secara OTOMATIS
+    await PackageRepository.updateExpiredPackages();
 
     return await PackageRepository.findByUnit(unitNumber);
   }

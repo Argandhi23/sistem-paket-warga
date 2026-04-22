@@ -15,6 +15,7 @@ enum Role {
 enum PackageStatus {
   RECEIVED_BY_SECURITY
   DELIVERED_TO_WARGA
+  EXPIRED
 }
 
 // --- MODEL USER YANG DIPERBARUI ---
@@ -103,37 +104,4 @@ model Package {
 
   securityId     String
   security       User          @relation("SecurityRecordedPackages", fields: [securityId], references: [id])
-}
-
-// --- Tabel Warga ---
-model Warga {
-  id        String   @id @default(uuid())
-  nama      String
-  blokRumah String   // Contoh: "Blok A No. 12"
-  noHp      String?  // Boleh kosong
-  paket     Paket[]  // Relasi: 1 Warga bisa punya banyak Paket
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// --- Status Paket ---
-enum StatusPaket {
-  PENDING   // Paket baru datang, belum diambil
-  DIAMBIL   // Paket sudah diambil oleh warga
-}
-
-// --- Tabel Paket ---
-model Paket {
-  id             String      @id @default(uuid())
-  resi           String?     // Nomor resi (boleh kosong kalau kurir tidak kasih resi)
-  kurir          String      // Contoh: JNE, J&T, Shopee Express, Gojek
-  status         StatusPaket @default(PENDING)
-  
-  // Relasi ke tabel Warga
-  penerimaId     String
-  penerima       Warga       @relation(fields: [penerimaId], references: [id], onDelete: Cascade)
-  
-  tanggalMasuk   DateTime    @default(now())
-  tanggalDiambil DateTime?   // Akan diisi saat status berubah jadi DIAMBIL
 }

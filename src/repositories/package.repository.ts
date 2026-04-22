@@ -1,9 +1,10 @@
 import prisma from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { Prisma, PackageStatus } from '@prisma/client';
 
 export class PackageRepository {
   // ---> INI FUNGSI BARU YANG KITA TAMBAHKAN UNTUK ADMIN & SECURITY <---
   static async findAll() {
+    await PackageRepository.updateExpiredPackages(); // Trigger sinkronisasi expired state
     return await prisma.package.findMany({
       orderBy: { receivedAt: 'desc' },
       include: {
@@ -30,13 +31,29 @@ export class PackageRepository {
     });
   }
 
-  // Fungsi untuk update status paket saat diambil
   static async updateStatusToDelivered(packageId: string) {
     return await prisma.package.update({
       where: { id: packageId },
       data: {
-        status: 'DELIVERED_TO_WARGA',
+        status: PackageStatus.DELIVERED_TO_WARGA,
         pickedUpAt: new Date(),
+      },
+    });
+  }
+
+  static async updateExpiredPackages() {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    return await prisma.package.updateMany({
+      where: {
+        status: PackageStatus.RECEIVED_BY_SECURITY,
+        receivedAt: {
+          lt: threeDaysAgo,
+        },
+      },
+      data: {
+        status: PackageStatus.EXPIRED,
       },
     });
   }
