@@ -11,6 +11,6 @@ export default defineConfig({
   },
   datasource: {
     // Ubah dari DATABASE_URL menjadi DIRECT_URL khusus untuk migrasi Supabase
-    url: process.env["DIRECT_URL"],
+    url: process.env["DIRECT_URL"] || process.env["DATABASE_URL"] || "postgresql://postgres:postgres@localhost:5432/sistem_paket_warga?schema=public",
   },
 });
