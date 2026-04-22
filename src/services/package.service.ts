@@ -1,4 +1,5 @@
 import { PackageRepository } from '@/repositories/package.repository';
+import { ApiError } from '@/lib/custom-error';
 
 export class PackageService {
   static async receiveNewPackage(payload: {
@@ -26,4 +27,13 @@ export class PackageService {
     
     return newPackage;
   }
+
+  static async listPackagesForWarga(unitNumber: string | null | undefined) {
+    if (!unitNumber) {
+      throw new ApiError(400, 'User tidak terasosiasi dengan nomor unit rumah manapun');
+    }
+
+    return await PackageRepository.findByUnit(unitNumber);
+  }
+
 }
