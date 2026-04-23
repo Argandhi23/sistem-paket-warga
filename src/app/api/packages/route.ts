@@ -25,44 +25,71 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    // 🛡️ SECURITY 1: Cek Session Login
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-      throw new ApiError(401, "Unauthorized: Anda harus login untuk melihat data paket");
+      throw new ApiError(401, "Unauthorized");
     }
 
     const { searchParams } = new URL(request.url);
-    const requestedUnit = searchParams.get('unitNumber') || searchParams.get('unit');
+    const params = {
+      unit: searchParams.get('unit') || undefined,
+      status: searchParams.get('status') || undefined,
+      sort: searchParams.get('sort') || undefined,
+      courier: searchParams.get('courier') || undefined,
+      startDate: searchParams.get('startDate') || undefined,
+      endDate: searchParams.get('endDate') || undefined,
+    };
 
     const userRole = session.user.role;
     const userUnitNumber = session.user.unitNumber;
 
-    let packages;
-
-    // 🛡️ SECURITY 2: Otorisasi Role & Mencegah IDOR
+    // Keamanan: Warga hanya boleh lihat unit miliknya sendiri
     if (userRole === "WARGA") {
-      // Warga wajib punya unit rumah
-      if (!userUnitNumber) {
-        throw new ApiError(403, "Akun Anda belum ditautkan ke unit rumah manapun.");
-      }
-      
-      // Paksa pencarian HANYA ke unit milik Warga tersebut (Abaikan requestedUnit dari URL)
-      packages = await PackageRepository.findByUnit(userUnitNumber);
-      
-    } else if (userRole === "ADMIN" || userRole === "SECURITY") {
-      // Admin dan Security bebas mencari unit mana saja via URL, atau melihat semua data
-      if (requestedUnit) {
-        packages = await PackageRepository.findByUnit(requestedUnit);
-      } else {
-        // Jika tidak ada ?unit= di URL, ambil semua data paket
-        // (Pastikan kamu memiliki fungsi findAll() di PackageRepository-mu ya)
-        packages = await PackageRepository.findAll(); 
-      }
-    } else {
-      throw new ApiError(403, "Akses ditolak untuk role Anda.");
+      if (!userUnitNumber) throw new ApiError(403, "Unit belum ditautkan");
+      params.unit = userUnitNumber;
     }
 
-    return NextResponse.json({ success: true, data: packages }, { status: 200 });
+    const packages = await PackageService.listForAdmin(params);
+
+    return NextResponse.json({ success: true, data: packages });
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== "SECURITY" && session.user.role !== "ADMIN")) {
+      throw new ApiError(403, "Hanya Security atau Admin yang dapat mengubah data paket.");
+    }
+
+    const body = await request.json();
+    const { id, ...data } = body;
+    
+    if (!id) throw new ApiError(400, "ID paket wajib diisi.");
+
+    const updatedPackage = await PackageRepository.update(id, data);
+    return NextResponse.json({ success: true, data: updatedPackage });
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ADMIN") {
+      throw new ApiError(403, "Hanya Admin yang dapat menghapus log paket.");
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) throw new ApiError(400, "ID paket wajib diisi.");
+
+    await PackageRepository.delete(id);
+    return NextResponse.json({ success: true, message: "Log paket berhasil dihapus." });
   } catch (error) {
     return handleError(error);
   }

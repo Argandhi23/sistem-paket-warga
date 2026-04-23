@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
+@theme {
+  /* Brand Colors */
+  --color-primary: #1A365D;
+  --color-primary-dark: #112440;
+  --color-primary-light: #e8edf4;
+  --color-secondary: #f6AD55;
+  --color-secondary-dark: #4F2E00;
+  --color-secondary-light: #fff7ed;
+  --color-tertiary: #4F2E00;
+  
+  /* Backgrounds */
+  --color-bg-main: #fcfcfc;
+  --color-bg-card: #ffffff;
+  --color-bg-sidebar: #f4f4f5;
+  --color-bg-header: #ffffff;
+  --color-bg-muted: #f8fafc;
+  
+  /* Text */
+  --color-text-main: #1A365D;
+  --color-text-body: #3f3f46;
+  --color-text-muted: #77777A;
+  --color-text-accent: #1A365D;
+  
+  /* Borders & Dividers */
+  --color-border-main: #e4e4e7;
+  --color-border-light: #f1f5f9;
+  --color-border-sidebar: #e4e4e7;
+  
+  /* Status Colors */
+  --color-success: #166534;
+  --color-danger: #dc2626;
+  --color-danger-light: #fef2f2;
+  --color-danger-border: #fecaca;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 12px rgba(26, 54, 93, 0.05);
+  --shadow-card: 0 10px 30px rgba(26, 54, 93, 0.1);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #fcfcfc;
+  --foreground: #1A365D;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Base Utility Classes */
+@layer components {
+  .card-base {
+    @apply rounded-xl border border-border-main bg-bg-card shadow-soft;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary-dark hover:shadow-md active:scale-[0.98];
+  }
+
+  .btn-outline {
+    @apply rounded-lg border border-border-main bg-bg-card px-4 py-2 text-sm font-bold text-text-muted transition-all hover:bg-bg-sidebar hover:text-primary;
+  }
+
+  .btn-danger {
+    @apply rounded-lg bg-danger px-4 py-2 text-sm font-bold text-white transition-all hover:opacity-90;
+  }
+
+  .badge-primary {
+    @apply inline-flex rounded-md bg-primary-light px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-primary;
+  }
+
+  .badge-secondary {
+    @apply inline-flex rounded-md bg-secondary-light px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-secondary;
+  }
+
+  .badge-success {
+    @apply inline-flex rounded-md bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-700;
+  }
+
+  .input-base {
+    @apply w-full rounded-lg border border-border-main bg-white py-2.5 px-4 text-sm text-text-main outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary;
+  }
+
+  .table-container {
+    @apply mt-4 overflow-x-auto rounded-xl border border-border-main bg-bg-card shadow-soft;
+  }
+
+  .table-head {
+    @apply sticky top-0 z-[1] bg-bg-sidebar/50 text-[10px] font-black uppercase tracking-widest text-text-muted;
+  }
 }

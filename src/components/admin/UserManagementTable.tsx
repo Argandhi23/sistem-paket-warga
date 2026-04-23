@@ -3,6 +3,11 @@
 import { Mail, Pencil, ShieldCheck, Trash2, User2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Avatar } from '@/components/ui/Avatar';
+import { Card, CardHeader, CardFooter } from '@/components/ui/Card';
+import { Input, Select } from '@/components/ui/Input';
 
 type UserItem = {
   id: string;
@@ -26,13 +31,6 @@ type EditDraft = {
   role: string;
   unitNumber: string;
 };
-
-function initials(name: string | null, email: string | null) {
-  const seed = (name || email || 'U').trim();
-  const parts = seed.split(' ').filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
-}
 
 export default function UserManagementTable({ rows, activeRole, activeSort }: UserManagementTableProps) {
   const router = useRouter();
@@ -171,10 +169,10 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
 
   return (
     <>
-      <div className="mt-4 overflow-x-auto rounded-2xl border border-[#cfdceb] bg-white shadow-[0_8px_24px_rgba(37,76,130,0.08)]">
+      <div className="table-container">
         <table className="min-w-[980px] w-full text-left">
-          <thead className="sticky top-0 z-[1] bg-[#e8f0f9] text-xs uppercase tracking-[0.12em] text-[#6e849f]">
-            <tr className="border-b border-[#d6e1ef]">
+          <thead className="table-head">
+            <tr className="border-b border-border-light">
               <th scope="col" className="px-6 py-4 font-semibold">Nama Pengguna</th>
               <th scope="col" className="px-6 py-4 font-semibold">Unit / Rumah</th>
               <th scope="col" className="px-6 py-4 font-semibold">No. Whatsapp</th>
@@ -187,59 +185,53 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
             {emptyState ? (
               <tr>
                 <td colSpan={6} className="px-6 py-12 text-center">
-                  <p className="text-lg font-semibold text-[#2b3f59]">Belum ada akun warga.</p>
-                  <p className="mt-1 text-sm text-[#6d829d]">Tambahkan pengguna baru untuk memulai manajemen akun.</p>
+                  <p className="text-lg font-semibold text-text-main">Belum ada akun warga.</p>
+                  <p className="mt-1 text-sm text-text-muted">Tambahkan pengguna baru untuk memulai manajemen akun.</p>
                 </td>
               </tr>
             ) : (
               tableRows.map((warga) => (
-                <tr key={warga.id} className="border-b border-[#d6e1ef] text-[#2f3f56] last:border-b-0">
+                <tr key={warga.id} className="border-b border-border-light text-text-body last:border-b-0">
                   <td className="px-6 py-3.5 md:py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-10 items-center justify-center rounded-full bg-[#cad9eb] text-sm font-bold text-[#2c4f7a]">
-                        {initials(warga.name, warga.email)}
-                      </div>
+                      <Avatar name={warga.name} email={warga.email} />
                       <div>
-                        <p className="text-[1.03rem] font-semibold leading-tight text-[#1f324b] md:text-[1.2rem]">{warga.name || '-'}</p>
-                        <p className="text-[0.86rem] text-[#7086a0] md:text-[0.95rem]">{warga.email || '-'}</p>
+                        <p className="text-[1.03rem] font-semibold leading-tight text-text-main md:text-[1.2rem]">{warga.name || '-'}</p>
+                        <p className="text-[0.86rem] text-text-muted md:text-[0.95rem]">{warga.email || '-'}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-3.5 text-[1.1rem] font-medium leading-tight text-[#2a3e57] md:py-4 md:text-[1.3rem]">
+                  <td className="px-6 py-3.5 text-[1.1rem] font-medium leading-tight text-text-body md:py-4 md:text-[1.3rem]">
                     {warga.rumah ? `${warga.rumah.blok} - ${warga.rumah.nomor}` : warga.unitNumber || '-'}
                   </td>
-                  <td className="px-6 py-3.5 text-[1.1rem] text-[#4f6683] md:py-4 md:text-[1.3rem]">-</td>
+                  <td className="px-6 py-3.5 text-[1.1rem] text-text-muted md:py-4 md:text-[1.3rem]">-</td>
                   <td className="px-6 py-3.5 md:py-4">
                     {warga.role === 'SECURITY' ? (
-                      <span className="inline-flex rounded-full bg-[#ead8bf] px-3 py-1 text-sm font-bold uppercase tracking-[0.08em] text-[#8f5e12]">
-                        SATPAM
-                      </span>
+                      <Badge variant="secondary">SATPAM</Badge>
                     ) : (
-                      <span className="inline-flex rounded-full bg-[#c6dbef] px-3 py-1 text-sm font-bold uppercase tracking-[0.08em] text-[#2c5fa6]">
-                        WARGA
-                      </span>
+                      <Badge variant="primary">WARGA</Badge>
                     )}
                   </td>
                   <td className="px-6 py-3.5 md:py-4">
-                    <span className="inline-flex items-center gap-2 text-[1rem] font-medium text-[#324861] md:text-[1.15rem]">
-                      <span className="size-2.5 rounded-full bg-[#4caf78]" />
+                    <span className="inline-flex items-center gap-2 text-[1rem] font-medium text-text-body md:text-[1.15rem]">
+                      <span className="size-2.5 rounded-full bg-success" />
                       Aktif
                     </span>
                   </td>
                   <td className="px-6 py-3.5 md:py-4">
-                    <div className="flex items-center justify-end gap-2 text-[#778ca7]">
-                      <button
-                        type="button"
+                    <div className="flex items-center justify-end gap-2 text-text-muted">
+                      <Button
+                        variant="outline"
+                        size="icon"
                         onClick={() => openEdit(warga)}
-                        className="rounded-full border border-[#d7e3f2] bg-[#eef4fb] p-2 hover:bg-[#e2edf9]"
                         aria-label="Edit pengguna"
                       >
                         <Pencil size={16} />
-                      </button>
+                      </Button>
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(warga)}
-                        className="rounded-full border border-[#ecd5d8] bg-[#f8edef] p-2 text-[#b5525a] hover:bg-[#f3e2e5]"
+                        className="rounded-full border border-danger-border bg-danger-light p-2 text-danger hover:bg-opacity-80"
                         aria-label="Hapus pengguna"
                       >
                         <Trash2 size={16} />
@@ -253,134 +245,110 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
         </table>
       </div>
 
-      <p className="mt-3 min-h-5 text-sm text-[#5e7591]">{statusMessage}</p>
+      <p className="mt-3 min-h-5 text-sm text-text-muted">{statusMessage}</p>
 
       {editDraft ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#12233a]/40 p-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#cfdceb] bg-white shadow-[0_24px_60px_rgba(16,43,79,0.26)]">
-            <div className="flex items-center justify-between border-b border-[#e5edf7] px-6 py-5">
-              <h2 className="text-[1.9rem] font-bold leading-none text-[#1f324b]">Edit Pengguna</h2>
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
+          <Card className="w-full max-w-xl overflow-hidden shadow-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <h2 className="text-[1.9rem] font-bold leading-none text-text-main">Edit Pengguna</h2>
               <button
                 type="button"
                 onClick={() => setEditDraft(null)}
-                className="rounded p-1 text-[#7086a0] hover:bg-[#e8f0f9]"
+                className="rounded p-1 text-text-muted hover:bg-bg-header"
                 aria-label="Tutup modal edit"
               >
                 <X size={18} />
               </button>
-            </div>
+            </CardHeader>
 
             <div className="grid gap-3 px-6 py-5">
-              <div>
-                <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#7c8da3]">Nama Lengkap</p>
-                <div className="relative">
-                  <User2 size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#6b88ab]" />
-                  <input
-                    value={editDraft.name}
-                    onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, name: event.target.value } : prev))}
-                    placeholder="Masukkan nama lengkap..."
-                    className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] py-2.5 pl-10 pr-3 text-sm outline-none"
-                  />
-                </div>
-              </div>
+              <Input
+                label="Nama Lengkap"
+                icon={<User2 size={16} />}
+                value={editDraft.name}
+                onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, name: event.target.value } : prev))}
+                placeholder="Masukkan nama lengkap..."
+              />
 
-              <div>
-                <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#7c8da3]">Alamat Email</p>
-                <div className="relative">
-                  <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#6b88ab]" />
-                  <input
-                    value={editDraft.email}
-                    onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, email: event.target.value } : prev))}
-                    placeholder="contoh@email.com"
-                    className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] py-2.5 pl-10 pr-3 text-sm outline-none"
-                  />
-                </div>
-              </div>
+              <Input
+                label="Alamat Email"
+                icon={<Mail size={16} />}
+                value={editDraft.email}
+                onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, email: event.target.value } : prev))}
+                placeholder="contoh@email.com"
+              />
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#7c8da3]">Peran (Role)</p>
-                  <div className="relative">
-                    <ShieldCheck size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#6b88ab]" />
-                    <select
-                      value={editDraft.role}
-                      onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, role: event.target.value } : prev))}
-                      className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] py-2.5 pl-10 pr-3 text-sm outline-none"
-                    >
-                      <option value="WARGA">WARGA</option>
-                      <option value="SECURITY">SATPAM</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#7c8da3]">Status Akun</p>
-                  <input
-                    value="Aktif"
-                    disabled
-                    className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-3 py-2.5 text-sm text-[#5f728a]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#7c8da3]">Nomor Unit (Opsional)</p>
-                <input
-                  value={editDraft.unitNumber}
-                  onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, unitNumber: event.target.value } : prev))}
-                  placeholder="Contoh: A-12"
-                  className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-3 py-2.5 text-sm outline-none"
+                <Select
+                  label="Peran (Role)"
+                  icon={<ShieldCheck size={16} />}
+                  value={editDraft.role}
+                  onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, role: event.target.value } : prev))}
+                  options={[
+                    { value: 'WARGA', label: 'WARGA' },
+                    { value: 'SECURITY', label: 'SATPAM' },
+                  ]}
+                />
+                <Input
+                  label="Status Akun"
+                  value="Aktif"
+                  disabled
+                  className="text-text-muted"
                 />
               </div>
+
+              <Input
+                label="Nomor Unit (Opsional)"
+                value={editDraft.unitNumber}
+                onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, unitNumber: event.target.value } : prev))}
+                placeholder="Contoh: A-12"
+              />
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-[#e5edf7] px-6 py-4">
-              <button
-                type="button"
+            <CardFooter className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
                 onClick={() => !saving && setEditDraft(null)}
-                className="rounded-full border border-[#d6e1ef] px-4 py-2 text-sm font-semibold text-[#5f728a]"
                 disabled={saving}
               >
                 Batal
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={submitEditPreview}
                 disabled={saving}
-                className="rounded-full bg-[#3f6fd5] px-4 py-2 text-sm font-semibold text-white"
               >
                 {saving ? 'Menyimpan...' : 'Simpan Data User'}
-              </button>
-            </div>
-          </div>
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
       ) : null}
 
       {deleteTarget ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#12233a]/40 p-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-md rounded-2xl border border-[#decfd2] bg-white p-5">
-            <h2 className="text-xl font-bold text-[#1f324b]">Konfirmasi Hapus</h2>
-            <p className="mt-3 text-sm text-[#5f728a]">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
+          <Card className="w-full max-w-md p-5 border-danger-border">
+            <h2 className="text-xl font-bold text-text-main">Konfirmasi Hapus</h2>
+            <p className="mt-3 text-sm text-text-muted">
               Anda akan menghapus <span className="font-semibold">{deleteTarget.name ?? deleteTarget.email ?? deleteTarget.id}</span>.
             </p>
             <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={() => !deleting && setDeleteTarget(null)}
-                className="rounded-full border border-[#d6e1ef] px-4 py-2 text-sm font-semibold text-[#5f728a]"
                 disabled={deleting}
               >
                 Batal
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={submitDeletePreview}
                 disabled={deleting}
-                className="rounded-full bg-[#c4525a] px-4 py-2 text-sm font-semibold text-white"
               >
                 {deleting ? 'Menghapus...' : 'Ya, Hapus'}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       ) : null}
     </>

@@ -1,9 +1,15 @@
+import "dotenv/config";
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
 // 1. Ambil URL database (prioritaskan DIRECT_URL jika ada)
 let connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL || '';
+
+// 🌟 FIX: Ganti localhost ke 127.0.0.1 untuk menghindari isu resolusi IPv6
+if (connectionString.includes('@localhost:')) {
+  connectionString = connectionString.replace('@localhost:', '@127.0.0.1:');
+}
 
 // 2. TRIK SUPABASE: Paksa ganti port dari Pooler (6543) ke Direct (5432)
 if (connectionString.includes(':6543')) {

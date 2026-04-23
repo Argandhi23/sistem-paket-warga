@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Input, Select } from '@/components/ui/Input';
 
 export default function TambahWargaForm() {
   const router = useRouter();
@@ -71,100 +73,78 @@ export default function TambahWargaForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 p-4 md:p-6">
-      <div>
-        <label htmlFor="name" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
-          Nama Lengkap
-        </label>
-        <input
-          id="name"
-          type="text"
-          name="name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          required
-          className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] placeholder:text-[#91a4bb] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
-          placeholder="Masukkan nama lengkap..."
-        />
-      </div>
+      <Input
+        label="Nama Lengkap"
+        id="name"
+        type="text"
+        name="name"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        required
+        placeholder="Masukkan nama lengkap..."
+      />
 
-      <div>
-        <label htmlFor="email" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
-          Alamat Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          name="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          required
-          className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] placeholder:text-[#91a4bb] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
-          placeholder="contoh@email.com"
-        />
-      </div>
+      <Input
+        label="Alamat Email"
+        id="email"
+        type="email"
+        name="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        required
+        placeholder="contoh@email.com"
+      />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <label htmlFor="role" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
-            Peran (Role)
-          </label>
-          <select
-            id="role"
-            value={role}
-            onChange={(event) => setRole(event.target.value === 'SATPAM' ? 'SATPAM' : 'WARGA')}
-            className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
-          >
-            <option value="WARGA">WARGA</option>
-            <option value="SATPAM">SATPAM</option>
-          </select>
-        </div>
+        <Select
+          label="Peran (Role)"
+          id="role"
+          value={role}
+          onChange={(event) => setRole(event.target.value === 'SATPAM' ? 'SATPAM' : 'WARGA')}
+          options={[
+            { value: 'WARGA', label: 'WARGA' },
+            { value: 'SATPAM', label: 'SATPAM' },
+          ]}
+        />
 
-        <div>
-          <label htmlFor="unitNumber" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
-            Nomor Unit (Opsional)
-          </label>
-          <input
-            id="unitNumber"
-            value={unitNumber}
-            onChange={(event) => setUnitNumber(event.target.value)}
-            placeholder="Contoh: A-12"
-            className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="password" className="mb-1 block text-xs font-bold uppercase tracking-[0.12em] text-[#6f84a0]">
-          Password Awal
-        </label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          required
-          minLength={8}
-          placeholder="Minimal 8 karakter"
-          className="w-full rounded-xl border border-[#d5e1f0] bg-[#e7f0fb] px-4 py-3 text-sm text-[#324861] placeholder:text-[#91a4bb] focus:border-[#6a91d8] focus:outline-none focus:ring-2 focus:ring-[#b4c9eb] md:text-base"
+        <Input
+          label="Nomor Unit (Opsional)"
+          id="unitNumber"
+          value={unitNumber}
+          onChange={(event) => setUnitNumber(event.target.value)}
+          placeholder="Contoh: A-12"
         />
       </div>
 
-      <p className="min-h-5 text-sm text-[#5e7591]">{message}</p>
+      <Input
+        label="Password Awal"
+        id="password"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        required
+        minLength={8}
+        placeholder="Minimal 8 karakter"
+      />
 
-      <div className="flex flex-col gap-3 border-t border-[#e3ebf5] pt-4 sm:flex-row sm:items-center sm:justify-end">
-        <Link
-          href="/admin/warga"
-          className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-[0.95rem] font-semibold text-[#516a86] transition hover:bg-[#edf3fb]"
+      <p className="min-h-5 text-sm text-text-muted">{message}</p>
+
+      <div className="flex flex-col gap-3 border-t border-border-light pt-4 sm:flex-row sm:items-center sm:justify-end">
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => router.push('/admin/warga')}
+          className="text-text-muted"
         >
           Batal
-        </Link>
-        <button
+        </Button>
+        <Button
           type="submit"
           disabled={saving}
-          className="w-full rounded-full bg-[#3f6fd5] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#325fc0] disabled:cursor-not-allowed disabled:bg-[#9fb4d8] sm:w-auto sm:min-w-[230px]"
+          className="sm:min-w-[230px]"
         >
           {saving ? 'Menyimpan...' : 'Simpan Data User'}
-        </button>
+        </Button>
       </div>
     </form>
   );

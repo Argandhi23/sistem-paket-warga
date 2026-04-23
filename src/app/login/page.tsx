@@ -8,6 +8,7 @@ import { AuthCard } from "@/components/auth/AuthCard";
 import { AuthInput } from "@/components/auth/AuthInput";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { PasswordField } from "@/components/auth/PasswordField";
+import { Button } from "@/components/ui/Button";
 
 type FieldName = "email" | "password";
 
@@ -116,36 +117,39 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <div className="order-2 flex items-center justify-center bg-[linear-gradient(155deg,#16338f_0%,#1f4db8_40%,#235cc9_100%)] p-8 md:order-1 md:p-10">
-        <div className="w-full rounded-2xl border border-white/20 bg-white/10 p-8 text-white backdrop-blur-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">Sistem Paket Warga</p>
-          <h2 className="mt-4 font-serif text-3xl font-semibold leading-tight">Distribusi paket rumah jadi lebih rapi.</h2>
-          <p className="mt-4 max-w-sm text-sm text-blue-100/90">
+      <div className="order-2 flex items-center justify-center bg-primary p-8 md:order-1 md:p-10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_-20%,rgba(255,255,255,0.15)_0%,transparent_50%)]" />
+        <div className="w-full rounded-2xl border border-white/20 bg-white/10 p-8 text-white backdrop-blur-md relative z-10">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-100/80">Sistem Paket Warga</p>
+          <h2 className="mt-4 text-3xl font-bold leading-tight">Distribusi paket rumah jadi lebih rapi.</h2>
+          <p className="mt-4 max-w-sm text-sm text-blue-100/90 leading-relaxed">
             Login sebagai Warga, Admin, atau Sekuriti untuk melihat dashboard sesuai role. Akun dikelola
             melalui CRUD user oleh admin perumahan.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-3 text-xs text-blue-100">
-            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-3 py-3 shadow-sm">
               <PackageCheck className="h-4 w-4" aria-hidden="true" />
               Tracking Paket
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-3 py-3 shadow-sm">
               <ShieldCheck className="h-4 w-4" aria-hidden="true" />
               Validasi Keamanan
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-3 py-3 shadow-sm">
               <TimerReset className="h-4 w-4" aria-hidden="true" />
               Riwayat Penerimaan
             </div>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-3">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-3 py-3 shadow-sm">
               <UserRoundCheck className="h-4 w-4" aria-hidden="true" />
               Kontrol Akses Role
             </div>
           </div>
         </div>
+        {/* Decorative circle */}
+        <div className="absolute -bottom-20 -right-20 size-64 rounded-full bg-white/5 blur-3xl" />
       </div>
 
-      <div className="order-1 flex items-center justify-center p-6 md:order-2 md:p-10">
+      <div className="order-1 flex items-center justify-center p-6 md:order-2 md:p-10 bg-bg-card">
         <AuthCard title="Login" description="Masuk ke sistem menggunakan email dan kata sandi yang telah diberikan admin.">
           <form className="space-y-5" onSubmit={onSubmit} noValidate>
             <AuthInput
@@ -173,15 +177,15 @@ export default function LoginPage() {
 
             <AuthActions onForgotPasswordClick={() => setStatusMessage("Not implemented yet")} />
 
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-xl bg-[#1a3fd4] px-4 py-3 text-sm font-semibold text-white outline-none transition hover:bg-[#1737b8] focus-visible:ring-2 focus-visible:ring-blue-300"
+              className="w-full py-3.5 rounded-xl shadow-md text-base"
             >
-              {isSubmitting ? "Memproses..." : "Login"}
-            </button>
+              {isSubmitting ? "Memproses..." : "Login Ke Dashboard"}
+            </Button>
 
-            <p aria-live="polite" className="min-h-6 text-sm text-slate-600">
+            <p aria-live="polite" className="min-h-6 text-sm text-text-muted italic text-center">
               {statusMessage}
             </p>
           </form>

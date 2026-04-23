@@ -40,9 +40,9 @@ export const shellConfigs: Record<AppRole, ShellConfig> = {
       { key: 'dashboard', href: '/admin', label: 'Dashboard', icon: Grid2x2 },
       { key: 'warga', href: '/admin/warga', label: 'Data Pengguna', icon: Users },
       { key: 'rumah', href: '/admin/rumah', label: 'Manajemen Rumah', icon: Home },
-      { key: 'paket', href: '/admin/paket', label: 'Log Paket', icon: Package },
+      { key: 'paket', href: '/admin/paket', label: 'Daftar Paket', icon: Package },
     ],
-    quickAction: { href: '/admin/warga/tambah', label: '+ Tambah Pengguna' },
+    quickAction: { href: '/admin/paket/tambah', label: '+ Input Paket Baru' },
     topIcons: baseIcons,
   },
   SECURITY: {
@@ -53,10 +53,9 @@ export const shellConfigs: Record<AppRole, ShellConfig> = {
     searchPlaceholder: 'Cari nomor resi atau unit...',
     navItems: [
       { key: 'dashboard', href: '/security', label: 'Dashboard', icon: Grid2x2 },
-      { key: 'input-paket', href: '/security/input-paket', label: 'Input Paket', icon: PlusCircle },
       { key: 'paket', href: '/security/paket', label: 'Daftar Paket', icon: Package },
     ],
-    quickAction: { href: '/security/input-paket', label: '+ Input Paket Baru' },
+    quickAction: { href: '/security/paket/tambah', label: '+ Input Paket Baru' },
     topIcons: baseIcons,
   },
   WARGA: {

@@ -1,0 +1,53 @@
+/*
+  Palette from pallete.jpg
+  Usage: var(--pallete-primary), var(--pallete-secondary), etc.
+*/
+:root {
+  /* Primary (Blue) */
+  --pallete-primary: #1A365D;
+  --pallete-primary-100: #e8edf4;
+  --pallete-primary-200: #c9d6e6;
+  --pallete-primary-300: #a9bed7;
+  --pallete-primary-400: #7a9dc2;
+  --pallete-primary-500: #4b7cac;
+  --pallete-primary-600: #295080;
+  --pallete-primary-700: #1a365d;
+  --pallete-primary-800: #142846;
+  --pallete-primary-900: #0d1928;
+
+  /* Secondary (Orange) */
+  --pallete-secondary: #F6AD55;
+  --pallete-secondary-100: #fdf3e3;
+  --pallete-secondary-200: #fae0b8;
+  --pallete-secondary-300: #f7cd8c;
+  --pallete-secondary-400: #f4b960;
+  --pallete-secondary-500: #f6ad55;
+  --pallete-secondary-600: #d18e2c;
+  --pallete-secondary-700: #a36b1f;
+  --pallete-secondary-800: #6e4713;
+  --pallete-secondary-900: #3a2407;
+
+  /* Tertiary (Brown) */
+  --pallete-tertiary: #4F2E00;
+  --pallete-tertiary-100: #f3ede6;
+  --pallete-tertiary-200: #e1d1b8;
+  --pallete-tertiary-300: #cdb48a;
+  --pallete-tertiary-400: #b9975c;
+  --pallete-tertiary-500: #a57a2e;
+  --pallete-tertiary-600: #7d5e1f;
+  --pallete-tertiary-700: #4f2e00;
+  --pallete-tertiary-800: #2e1a00;
+  --pallete-tertiary-900: #1a0e00;
+
+  /* Neutral (Gray) */
+  --pallete-neutral: #77777A;
+  --pallete-neutral-100: #f5f5f6;
+  --pallete-neutral-200: #e0e0e2;
+  --pallete-neutral-300: #ccccce;
+  --pallete-neutral-400: #b7b7ba;
+  --pallete-neutral-500: #a2a2a5;
+  --pallete-neutral-600: #8d8d90;
+  --pallete-neutral-700: #77777a;
+  --pallete-neutral-800: #5c5c5e;
+  --pallete-neutral-900: #414143;
+}

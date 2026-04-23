@@ -27,7 +27,7 @@ export function PasswordField({
 
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="block text-sm font-medium text-slate-800">
+      <label htmlFor={id} className="block text-sm font-bold text-text-main uppercase tracking-wider text-[0.7rem]">
         {label}
       </label>
       <div className="relative">
@@ -42,19 +42,19 @@ export function PasswordField({
           required={required}
           aria-invalid={error ? "true" : "false"}
           aria-describedby={describedBy}
-          className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-28 text-sm text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-200"
+          className="w-full rounded-xl border border-border-light bg-bg-header py-3 pl-11 pr-28 text-sm text-text-main outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
         />
-        <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" aria-hidden="true" />
         <button
           type="button"
           onClick={() => setVisible((previous) => !previous)}
-          className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center gap-1 rounded-lg px-3 py-1 text-xs font-semibold text-slate-600 outline-none transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-blue-300"
+          className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center gap-1 rounded-lg px-3 py-1 text-xs font-bold text-text-muted outline-none transition hover:bg-bg-card/50 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/20"
         >
           {visible ? <EyeOff className="h-4.5 w-4.5" aria-hidden="true" /> : <Eye className="h-4.5 w-4.5" aria-hidden="true" />}
         </button>
       </div>
       {error ? (
-        <p id={`${id}-error`} className="text-sm text-rose-600">
+        <p id={`${id}-error`} className="text-sm text-danger font-medium">
           {error}
         </p>
       ) : null}

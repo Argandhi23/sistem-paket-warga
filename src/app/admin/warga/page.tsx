@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import prisma from '@/lib/prisma';
-import AppSidebar from '@/components/shell/AppSidebar';
-import AppTopbar from '@/components/shell/AppTopbar';
-import { shellConfigs } from '@/components/shell/nav-config';
+import AppShell from '@/components/shell/AppShell';
 import { requireAdminSession } from '@/lib/require-admin-session';
 import UserManagementTable from '@/components/admin/UserManagementTable';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import Link from 'next/link';
 
 type WargaPageProps = {
   searchParams?: Promise<{ role?: string; sort?: string }>;
@@ -40,8 +40,6 @@ function sortLink(sort: 'terbaru' | 'lama', role: 'SEMUA' | 'WARGA' | 'SATPAM') 
 export default async function WargaPage({ searchParams }: WargaPageProps) {
   await requireAdminSession();
 
-  const shellConfig = shellConfigs.ADMIN;
-
   const params = (await searchParams) ?? {};
   const activeRole = normalizeRole(params.role);
   const activeSort = normalizeSort(params.sort);
@@ -55,100 +53,89 @@ export default async function WargaPage({ searchParams }: WargaPageProps) {
   });
 
   return (
-    <div className="min-h-screen bg-[#dce6f2] text-[#2f3f56]">
-      <div className="flex min-h-screen flex-col lg:flex-row">
-        <AppSidebar config={shellConfig} active="warga" />
+    <AppShell active="warga">
+      <section className="rounded-2xl border border-border-light bg-bg-header p-3 md:p-6 shadow-soft">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-[1.75rem] font-bold tracking-tight text-text-main md:text-[2.25rem]">
+              Manajemen Pengguna
+            </h1>
+            <p className="mt-1 text-[0.95rem] text-text-muted md:text-[1.05rem]">
+              Hanya Admin yang dapat mengelola akun warga dan satpam.
+            </p>
+          </div>
 
-        <main className="flex-1 p-[1.1rem] md:p-[1.5rem] lg:p-[1.75rem]">
-          <AppTopbar config={shellConfig} title="Budi Santoso" />
+          <Link href="/admin/warga/tambah">
+            <Button className="w-full sm:w-auto">+ Tambah Pengguna Baru</Button>
+          </Link>
+        </header>
 
-          <section className="mt-4 rounded-2xl border border-blue-100 bg-[#eaf1f9] p-3 md:p-6">
-            <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h1 className="text-[1.75rem] font-bold tracking-tight text-[#16293f] md:text-[2.25rem]">
-                  Manajemen Pengguna
-                </h1>
-                <p className="mt-1 text-[0.95rem] text-[#637995] md:text-[1.05rem]">
-                  Hanya Admin yang dapat mengelola akun warga dan satpam.
-                </p>
-              </div>
-
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm md:gap-3">
+          <div className="inline-flex rounded-full bg-bg-sidebar p-1">
+            <Link
+              href={roleLink('SEMUA', activeSort)}
+              className={`rounded-full px-5 py-1.5 font-semibold transition-all ${
+                activeRole === 'SEMUA' ? 'bg-primary text-white shadow-soft' : 'text-text-muted hover:text-primary'
+              }`}
+            >
+              Semua
+            </Link>
+            <Link
+              href={roleLink('WARGA', activeSort)}
+              className={`rounded-full px-5 py-1.5 font-semibold transition-all ${
+                activeRole === 'WARGA' ? 'bg-primary text-white shadow-soft' : 'text-text-muted hover:text-primary'
+              }`}
+            >
+              Warga
+            </Link>
+            <Link
+              href={roleLink('SATPAM', activeSort)}
+              className={`rounded-full px-5 py-1.5 font-semibold transition-all ${
+                activeRole === 'SATPAM' ? 'bg-primary text-white shadow-soft' : 'text-text-muted hover:text-primary'
+              }`}
+            >
+              Satpam
+            </Link>
+          </div>
+          <div className="rounded-full bg-bg-sidebar p-1 sm:ml-auto">
+            <div className="inline-flex w-full items-center sm:w-auto">
               <Link
-                href="/admin/warga/tambah"
-                className="inline-flex items-center justify-center rounded-full bg-[#3f6fd5] px-[1.1rem] py-[0.65rem] text-[0.92rem] font-semibold text-white shadow-sm transition hover:bg-[#315ec0] md:px-[1.5rem] md:py-[0.75rem] md:text-[1rem]"
+                href={sortLink('terbaru', activeRole)}
+                className={`rounded-full px-4 py-1.5 text-center font-semibold uppercase tracking-[0.08em] transition-all ${
+                  activeSort === 'terbaru' ? 'bg-primary text-white shadow-soft' : 'text-text-muted hover:text-primary'
+                }`}
               >
-                + Tambah Pengguna Baru
+                Terbaru
               </Link>
-            </header>
-
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-sm md:gap-3">
-              <div className="inline-flex rounded-full bg-[#dce7f4] p-1">
-                <Link
-                  href={roleLink('SEMUA', activeSort)}
-                  className={`rounded-full px-5 py-1.5 font-semibold ${
-                    activeRole === 'SEMUA' ? 'bg-[#3f6fd5] text-white' : 'text-[#657b97]'
-                  }`}
-                >
-                  Semua
-                </Link>
-                <Link
-                  href={roleLink('WARGA', activeSort)}
-                  className={`rounded-full px-5 py-1.5 font-semibold ${
-                    activeRole === 'WARGA' ? 'bg-[#3f6fd5] text-white' : 'text-[#657b97]'
-                  }`}
-                >
-                  Warga
-                </Link>
-                <Link
-                  href={roleLink('SATPAM', activeSort)}
-                  className={`rounded-full px-5 py-1.5 font-semibold ${
-                    activeRole === 'SATPAM' ? 'bg-[#3f6fd5] text-white' : 'text-[#657b97]'
-                  }`}
-                >
-                  Satpam
-                </Link>
-              </div>
-              <div className="w-full rounded-full bg-[#dce7f4] p-1 sm:ml-auto sm:w-auto">
-                <div className="inline-flex w-full items-center sm:w-auto">
-                  <Link
-                    href={sortLink('terbaru', activeRole)}
-                    className={`rounded-full px-4 py-1.5 text-center font-semibold uppercase tracking-[0.08em] ${
-                      activeSort === 'terbaru' ? 'bg-[#3f6fd5] text-white' : 'text-[#627891]'
-                    }`}
-                  >
-                    Terbaru
-                  </Link>
-                  <Link
-                    href={sortLink('lama', activeRole)}
-                    className={`rounded-full px-4 py-1.5 text-center font-semibold uppercase tracking-[0.08em] ${
-                      activeSort === 'lama' ? 'bg-[#3f6fd5] text-white' : 'text-[#627891]'
-                    }`}
-                  >
-                    Terlama
-                  </Link>
-                </div>
-              </div>
+              <Link
+                href={sortLink('lama', activeRole)}
+                className={`rounded-full px-4 py-1.5 text-center font-semibold uppercase tracking-[0.08em] transition-all ${
+                  activeSort === 'lama' ? 'bg-primary text-white shadow-soft' : 'text-text-muted hover:text-primary'
+                }`}
+              >
+                Terlama
+              </Link>
             </div>
+          </div>
+        </div>
 
-            <UserManagementTable rows={daftarWarga} activeRole={activeRole} activeSort={activeSort} />
+        <UserManagementTable rows={daftarWarga} activeRole={activeRole} activeSort={activeSort} />
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <article className="rounded-2xl border border-[#c8d8ea] bg-[#d8e4f2] p-4">
-                <p className="text-base font-bold uppercase tracking-[0.08em] text-[#2f5e9f] md:text-xl">Keamanan Data</p>
-                <p className="mt-2 text-sm text-[#536b87] md:text-lg">Perubahan akun pengguna tercatat untuk audit aktivitas admin.</p>
-              </article>
-              <article className="rounded-2xl border border-[#d8d0c0] bg-[#e9e1d4] p-4">
-                <p className="text-base font-bold uppercase tracking-[0.08em] text-[#8f5e12] md:text-xl">Verifikasi Warga</p>
-                <p className="mt-2 text-sm text-[#6f6554] md:text-lg">Pastikan data unit terisi benar agar pemetaan paket akurat.</p>
-              </article>
-              <article className="rounded-2xl border border-[#decfd2] bg-[#efe2e4] p-4">
-                <p className="text-base font-bold uppercase tracking-[0.08em] text-[#a23b33] md:text-xl">Batasan Admin</p>
-                <p className="mt-2 text-sm text-[#786469] md:text-lg">Penghapusan akun bersifat permanen dan harus terkonfirmasi.</p>
-              </article>
-            </div>
-          </section>
-        </main>
-      </div>
-    </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <Card className="p-4 border-primary-light bg-primary-light/20">
+            <p className="text-base font-bold uppercase tracking-[0.08em] text-primary-dark md:text-xl">Keamanan Data</p>
+            <p className="mt-2 text-sm text-text-body md:text-lg">Perubahan akun pengguna tercatat untuk audit aktivitas admin.</p>
+          </Card>
+          <Card className="p-4 border-secondary-light bg-secondary-light/20">
+            <p className="text-base font-bold uppercase tracking-[0.08em] text-secondary-dark md:text-xl">Verifikasi Warga</p>
+            <p className="mt-2 text-sm text-text-body md:text-lg">Pastikan data unit terisi benar agar pemetaan paket akurat.</p>
+          </Card>
+          <Card className="p-4 border-danger-border bg-danger-light/20">
+            <p className="text-base font-bold uppercase tracking-[0.08em] text-danger md:text-xl">Batasan Admin</p>
+            <p className="mt-2 text-sm text-text-body md:text-lg">Penghapusan akun bersifat permanen dan harus terkonfirmasi.</p>
+          </Card>
+        </div>
+      </section>
+    </AppShell>
   );
 }

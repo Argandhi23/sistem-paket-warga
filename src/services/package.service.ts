@@ -1,27 +1,43 @@
 import { PackageRepository } from '@/repositories/package.repository';
 import { ApiError } from '@/lib/custom-error';
-import prisma from '@/lib/prisma';
 
 export class PackageService {
+  static async listForAdmin(params: { 
+    unit?: string; 
+    status?: string; 
+    sort?: string;
+    courier?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    return await PackageRepository.findWithFilters({
+      unitNumber: params.unit,
+      status: params.status,
+      courier: params.courier,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      sort: params.sort === 'lama' ? 'asc' : 'desc'
+    });
+  }
+
+  static async getPackageStats(filters: { wargaId?: string; role: string }) {
+    const dbFilters: any = {};
+    if (filters.role === "WARGA") {
+      dbFilters.wargaId = filters.wargaId;
+    }
+    return await PackageRepository.getStats(dbFilters);
+  }
+
   static async receiveNewPackage(payload: {
     courierName: string;
     recipientName: string;
     unitNumber: string;
     securityId: string;
     trackingNumber?: string;
+    wargaId?: string;
   }) {
-    // Di sini kita tambahkan validasi bisnis
     if (!payload.unitNumber) {
       throw new ApiError(400, 'Nomor unit rumah/apartemen wajib diisi');
-    }
-
-    // Validasi: Pastikan unitNumber yang diinput Satpam memang ada di tabel Rumah
-    const rumahExists = await prisma.rumah.findFirst({
-      where: { nomor: payload.unitNumber }
-    });
-
-    if (!rumahExists) {
-      throw new ApiError(400, 'Unit tidak terdaftar');
     }
 
     // Panggil repository untuk simpan ke database
@@ -31,9 +47,8 @@ export class PackageService {
       unitNumber: payload.unitNumber,
       securityId: payload.securityId,
       trackingNumber: payload.trackingNumber,
+      wargaId: payload.wargaId,
     });
-
-    // TODO nantinya: Trigger notifikasi ke warga terkait
     
     return newPackage;
   }
@@ -47,10 +62,11 @@ export class PackageService {
       throw new ApiError(400, 'User tidak terasosiasi dengan nomor unit rumah manapun');
     }
 
-    // Jalankan sinkronisasi expired juga untuk Warga secara OTOMATIS
-    await PackageRepository.updateExpiredPackages();
-
-    return await PackageRepository.findByUnit(unitNumber);
+    // Menggunakan findWithFilters karena findByUnit sudah dihapus di repository
+    return await PackageRepository.findWithFilters({
+      unitNumber: unitNumber,
+      status: 'SEMUA',
+      sort: 'desc'
+    });
   }
-
 }

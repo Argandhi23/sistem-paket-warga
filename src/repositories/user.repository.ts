@@ -24,6 +24,31 @@ export class UserRepository {
     });
   }
 
+  static async findWargaByNameOrUnit(query: string) {
+    return prisma.user.findMany({
+      where: {
+        role: Role.WARGA,
+        OR: [
+          { name: { contains: query, mode: 'insensitive' } },
+          { unitNumber: { contains: query, mode: 'insensitive' } },
+          { rumah: { blok: { contains: query, mode: 'insensitive' } } },
+          { rumah: { nomor: { contains: query, mode: 'insensitive' } } },
+        ],
+      },
+      include: {
+        rumah: true,
+        _count: {
+          select: {
+            packages: {
+              where: { status: 'RECEIVED_BY_SECURITY' }
+            }
+          }
+        }
+      },
+      take: 10,
+    });
+  }
+
   static async findById(id: string) {
     return prisma.user.findUnique({ where: { id } });
   }
