@@ -44,12 +44,12 @@ export default async function AdminDashboard() {
             <p className="text-sm text-text-muted">Belum diambil hari ini</p>
           </Card>
 
-          <Card className="p-4 border-[#cfdbc3] bg-[#e3ecd8]/50">
-            <div className="flex items-center gap-2 text-[#4d7a37]">
+          <Card className="p-4 border-emerald-100 bg-emerald-50/50">
+            <div className="flex items-center gap-2 text-emerald-700">
               <Home size={18} />
               <p className="text-sm font-bold uppercase tracking-[0.08em]">Unit Terpetakan</p>
             </div>
-            <p className="mt-2 text-[1.75rem] font-bold text-[#2e4f28] md:text-[2rem]">87%</p>
+            <p className="mt-2 text-[1.75rem] font-bold text-emerald-900 md:text-[2rem]">87%</p>
             <p className="text-sm text-text-muted">Sinkron dengan data rumah</p>
           </Card>
 
