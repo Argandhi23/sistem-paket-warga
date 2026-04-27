@@ -5,7 +5,7 @@ interface AvatarProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-function initials(name: string | null, email: string | null) {
+function initials(name?: string | null, email?: string | null) {
   const seed = (name || email || 'U').trim();
   const parts = seed.split(' ').filter(Boolean);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();

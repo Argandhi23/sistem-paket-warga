@@ -51,7 +51,12 @@ export async function GET(request: Request) {
 
     const packages = await PackageService.listForAdmin(params);
 
-    return NextResponse.json({ success: true, data: packages });
+    const packagesWithPenalty = packages.map(pkg => ({
+      ...pkg,
+      penalty: PackageService.calculatePenalty(pkg.receivedAt)
+    }));
+
+    return NextResponse.json({ success: true, data: packagesWithPenalty });
   } catch (error) {
     return handleError(error);
   }

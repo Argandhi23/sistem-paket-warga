@@ -12,7 +12,7 @@ vi.mock('next-auth', () => ({
 
 vi.mock('../../repositories/package.repository', () => ({
   PackageRepository: {
-    findByUnit: vi.fn(),
+    findWithFilters: vi.fn(),
     findAll: vi.fn(),
   },
 }));
@@ -31,8 +31,8 @@ describe('Warga Data Isolation - Unit & Integration Test', () => {
       };
       (getServerSession as any).mockResolvedValue(mockSessionWargaA);
       
-      const mockPackagesForA1 = [{ id: 'pkg-1', recipientName: 'Warga A', unitNumber: 'A-1' }];
-      (PackageRepository.findByUnit as any).mockResolvedValue(mockPackagesForA1);
+      const mockPackagesForA1 = [{ id: 'pkg-1', recipientName: 'Warga A', unitNumber: 'A-1', receivedAt: new Date() }];
+      (PackageRepository.findWithFilters as any).mockResolvedValue(mockPackagesForA1);
 
       // Manipulasi URL Parameter seakan-akan Warga A nge-hit API dengan ?unit=B-2 (IDOR attempt)
       const request = new Request('http://localhost:3000/api/packages?unit=B-2');
@@ -42,8 +42,8 @@ describe('Warga Data Isolation - Unit & Integration Test', () => {
       expect(response.status).toBe(200);
       
       // PASTIKAN: Repositori dipanggil dengan unit milik session ('A-1'), BUKAN parameter URL ('B-2')
-      expect(PackageRepository.findByUnit).toHaveBeenCalledWith('A-1');
-      expect(PackageRepository.findByUnit).not.toHaveBeenCalledWith('B-2');
+      expect(PackageRepository.findWithFilters).toHaveBeenCalledWith(expect.objectContaining({ unitNumber: 'A-1' }));
+      expect(PackageRepository.findWithFilters).not.toHaveBeenCalledWith(expect.objectContaining({ unitNumber: 'B-2' }));
       
       // Pastikan data yang bocor bukan data Warga B
       expect(json.data[0].unitNumber).toBe('A-1');
@@ -61,8 +61,8 @@ describe('Warga Data Isolation - Unit & Integration Test', () => {
 
       // Harus di-block oleh sistem sebelum query ke database
       expect(response.status).toBe(403);
-      expect(json.error).toBe('Akun Anda belum ditautkan ke unit rumah manapun.');
-      expect(PackageRepository.findByUnit).not.toHaveBeenCalled();
+      expect(json.error).toBe('Unit belum ditautkan');
+      expect(PackageRepository.findWithFilters).not.toHaveBeenCalled();
     });
   });
 

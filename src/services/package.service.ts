@@ -69,4 +69,13 @@ export class PackageService {
       sort: 'desc'
     });
   }
+
+  static calculatePenalty(receivedAt: Date): number {
+    const today = new Date();
+    const diffTime = today.getTime() - receivedAt.getTime();
+    if (diffTime < 0) return 0;
+    
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, (diffDays - 3) * 2000);
+  }
 }
