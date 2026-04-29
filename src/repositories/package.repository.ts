@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma, PackageStatus } from "@prisma/client";
+import { getExpiryThresholdDate } from "@/lib/expiry";
 
 export class PackageRepository {
   static async findWithFilters(params: {
@@ -70,14 +71,13 @@ export class PackageRepository {
   }
 
   static async updateExpiredPackages() {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const thresholdDate = getExpiryThresholdDate();
 
     return await prisma.package.updateMany({
       where: {
         status: PackageStatus.RECEIVED_BY_SECURITY,
         receivedAt: {
-          lt: threeDaysAgo,
+          lt: thresholdDate,
         },
       },
       data: {

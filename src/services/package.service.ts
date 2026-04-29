@@ -1,5 +1,6 @@
 import { PackageRepository } from '@/repositories/package.repository';
 import { ApiError } from '@/lib/custom-error';
+import { PACKAGE_EXPIRY_DAYS } from '@/lib/expiry';
 
 export class PackageService {
   static async listForAdmin(params: { 
@@ -70,12 +71,17 @@ export class PackageService {
     });
   }
 
+  static calculatePenaltyFromDays(hariTerlambat: number): number {
+    return hariTerlambat * 2000;
+  }
+
   static calculatePenalty(receivedAt: Date): number {
     const today = new Date();
     const diffTime = today.getTime() - receivedAt.getTime();
     if (diffTime < 0) return 0;
     
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, (diffDays - 3) * 2000);
+    const hariTerlambat = Math.max(0, diffDays - PACKAGE_EXPIRY_DAYS);
+    return this.calculatePenaltyFromDays(hariTerlambat);
   }
 }
