@@ -263,35 +263,55 @@ export default function RumahManagementPanel() {
   }
 
   return (
-    <section className="mt-4 rounded-2xl border border-border-light bg-bg-header p-4 md:p-6 shadow-soft">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-[1.75rem] font-bold text-text-main md:text-[2.25rem]">Manajemen Hunian</h1>
-          <p className="mt-1 text-[0.95rem] text-text-muted md:text-[1.05rem]">
-            Konfigurasi hunian perumahan/apartemen dan pemetaan penghuni.
-          </p>
+    <div className="flex flex-col gap-8 pb-8">
+      {/* Premium Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-8 shadow-2xl sm:px-10 sm:py-12 mt-4 md:mt-0">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-secondary/10 blur-3xl"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+              Manajemen Hunian
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-blue-100/90 md:text-base">
+              Konfigurasi hunian unit perumahan, pemetaan blok, dan pengaturan asosiasi penghuni digital ke dalam sistem.
+            </p>
+          </div>
+          
+          <Button onClick={openCreateModal} className="shrink-0 bg-secondary hover:bg-secondary/90 text-secondary-dark font-bold border-0 shadow-lg px-6 py-3 rounded-xl transition-all hover:scale-105 w-full sm:w-auto">
+            + Tambah Hunian Baru
+          </Button>
         </div>
-        <Button onClick={openCreateModal}>
-          + Tambah Hunian
-        </Button>
-      </header>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Card className="p-4 border-primary-light bg-primary-light/20">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-primary-dark">Total Hunian</p>
-          <p className="mt-2 text-2xl font-bold text-text-main">{statistik.totalUnit}</p>
-        </Card>
-        <Card className="p-4 border-secondary-light bg-secondary-light/20">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-secondary-dark">Penghuni Terhubung</p>
-          <p className="mt-2 text-2xl font-bold text-text-main">{statistik.totalPenghuni}</p>
-        </Card>
-        <Card className="p-4 border-danger-border bg-danger-light/20">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-danger">Unit Belum Terisi</p>
-          <p className="mt-2 text-2xl font-bold text-text-main">{statistik.unitKosong}</p>
-        </Card>
       </div>
 
-      <div className="mt-4 max-w-sm">
+      <div className="px-1">
+        <div className="grid gap-5 sm:grid-cols-3 mb-6">
+          <Card className="relative overflow-hidden p-6 border-0 shadow-md bg-bg-card group hover:-translate-y-1 hover:shadow-lg transition-all rounded-2xl">
+            <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-primary/5 transition-transform duration-500 group-hover:scale-150"></div>
+            <div className="relative z-10">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-muted">Total Hunian</p>
+              <p className="mt-2 text-4xl font-black text-text-main">{statistik.totalUnit}</p>
+            </div>
+          </Card>
+          <Card className="relative overflow-hidden p-6 border-0 shadow-md bg-bg-card group hover:-translate-y-1 hover:shadow-lg transition-all rounded-2xl">
+            <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-secondary/10 transition-transform duration-500 group-hover:scale-150"></div>
+            <div className="relative z-10">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-muted">Penghuni Terhubung</p>
+              <p className="mt-2 text-4xl font-black text-text-main">{statistik.totalPenghuni}</p>
+            </div>
+          </Card>
+          <Card className="relative overflow-hidden p-6 border-0 shadow-md bg-bg-card group hover:-translate-y-1 hover:shadow-lg transition-all rounded-2xl">
+            <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-danger/5 transition-transform duration-500 group-hover:scale-150"></div>
+            <div className="relative z-10">
+              <p className="text-xs font-bold uppercase tracking-widest text-text-muted">Unit Belum Terisi</p>
+              <p className="mt-2 text-4xl font-black text-danger">{statistik.unitKosong}</p>
+            </div>
+          </Card>
+        </div>
+
+        <div className="mb-6 max-w-sm rounded-xl bg-bg-card shadow-sm border border-border-light p-3">
         <Input
           label="Cari Hunian"
           id="cari-unit"
@@ -302,76 +322,78 @@ export default function RumahManagementPanel() {
         />
       </div>
 
-      <div className="table-container">
-        <table className="min-w-[860px] w-full text-left text-sm">
-          <thead className="table-head">
-            <tr>
-              <th className="px-4 py-3">Blok</th>
-              <th className="px-4 py-3">Nomor Rumah / Unit</th>
-              <th className="px-4 py-3">Penghuni</th>
-              <th className="px-4 py-3">Dibuat</th>
-              <th className="px-4 py-3 text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
-                  <p className="text-lg font-semibold text-text-main">Memuat data rumah...</p>
-                  <p className="mt-1 text-sm text-text-muted">Mohon tunggu, data sedang dimuat.</p>
-                </td>
-              </tr>
-            ) : filteredRumah.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
-                  <p className="text-lg font-semibold text-text-main">Tidak ada data hunian sesuai pencarian.</p>
-                  <p className="mt-1 text-sm text-text-muted">Silakan tambah hunian baru atau ubah kata kunci pencarian.</p>
-                </td>
-              </tr>
-            ) : (
-              filteredRumah.map((item) => (
-                <tr key={item.id} className="border-b border-border-light text-text-body last:border-b-0">
-                  <td className="px-4 py-3 font-semibold text-text-main">{item.blok}</td>
-                  <td className="px-4 py-3 text-text-body">{item.nomor}</td>
-                  <td className="px-4 py-3 text-text-body">
-                    {item.penghuni.length === 0 ? (
-                      '-'
-                    ) : (
-                      <div className="space-y-1">
-                        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-muted">
-                          {item.penghuni.length} Penghuni
-                        </p>
-                        <p>{item.penghuni.map((p) => p.name ?? p.email ?? p.id).join(', ')}</p>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-text-muted">{formatTanggal(item.createdAt)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="inline-flex items-center gap-2 text-text-muted">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => openEditModal(item)}
-                        aria-label="Edit unit"
-                      >
-                        <Pencil size={16} />
-                      </Button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteTarget(item)}
-                        className="rounded-full border border-danger-border bg-danger-light p-2 text-danger hover:bg-opacity-80"
-                        aria-label="Hapus unit"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+        <div className="rounded-2xl bg-bg-card shadow-md border border-border-light overflow-hidden mt-6">
+          <div className="table-container">
+            <table className="min-w-[860px] w-full text-left text-sm">
+              <thead className="table-head">
+                <tr>
+                  <th className="px-4 py-3">Blok</th>
+                  <th className="px-4 py-3">Nomor Rumah / Unit</th>
+                  <th className="px-4 py-3">Penghuni</th>
+                  <th className="px-4 py-3">Dibuat</th>
+                  <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <p className="text-lg font-semibold text-text-main">Memuat data rumah...</p>
+                      <p className="mt-1 text-sm text-text-muted">Mohon tunggu, data sedang dimuat.</p>
+                    </td>
+                  </tr>
+                ) : filteredRumah.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <p className="text-lg font-semibold text-text-main">Tidak ada data hunian sesuai pencarian.</p>
+                      <p className="mt-1 text-sm text-text-muted">Silakan tambah hunian baru atau ubah kata kunci pencarian.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredRumah.map((item) => (
+                    <tr key={item.id} className="border-b border-border-light text-text-body last:border-b-0">
+                      <td className="px-4 py-3 font-semibold text-text-main">{item.blok}</td>
+                      <td className="px-4 py-3 text-text-body">{item.nomor}</td>
+                      <td className="px-4 py-3 text-text-body">
+                        {item.penghuni.length === 0 ? (
+                          '-'
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-text-muted">
+                              {item.penghuni.length} Penghuni
+                            </p>
+                            <p>{item.penghuni.map((p) => p.name ?? p.email ?? p.id).join(', ')}</p>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-text-muted">{formatTanggal(item.createdAt)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="inline-flex items-center gap-2 text-text-muted">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => openEditModal(item)}
+                            aria-label="Edit unit"
+                          >
+                            <Pencil size={16} />
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(item)}
+                            className="rounded-full border border-danger-border bg-danger-light p-2 text-danger hover:bg-opacity-80 transition-all"
+                            aria-label="Hapus unit"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
       {!usersApiReady ? (
         <p className="mt-3 text-xs text-secondary-dark">
@@ -383,31 +405,39 @@ export default function RumahManagementPanel() {
 
       {rumahModalOpen ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
-          <Card className="w-full max-w-xl p-0 overflow-hidden shadow-card">
-            <div className="flex items-center justify-between border-b border-border-light px-6 py-5">
-              <div>
-                <h2 className="text-[2rem] font-bold leading-none text-text-main">Detail Hunian</h2>
-                <p className="mt-1 text-sm text-text-muted">Konfigurasi hunian perumahan/apartemen dan pemetaan penghuni.</p>
+          <div className="w-full max-w-xl overflow-hidden shadow-2xl rounded-3xl border-0 bg-bg-card flex flex-col max-h-[90vh]">
+            <div className="relative overflow-hidden bg-primary px-6 py-8 sm:px-10 shrink-0">
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-secondary/10 blur-3xl"></div>
+              
+              <div className="relative z-10 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">Detail Hunian</h2>
+                  <p className="mt-2 text-sm text-blue-100/90 leading-relaxed max-w-md">
+                    Konfigurasi hunian perumahan/apartemen dan pemetaan penghuni.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !saving && setRumahModalOpen(false)}
+                  className="rounded-full bg-white/10 p-2.5 text-white transition-all hover:bg-white/20 hover:scale-105 backdrop-blur-md shadow-sm shrink-0"
+                  aria-label="Tutup modal detail unit"
+                  disabled={saving}
+                >
+                  <X size={20} strokeWidth={2.5} />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => !saving && setRumahModalOpen(false)}
-                className="rounded p-1 text-text-muted hover:bg-bg-header"
-                aria-label="Tutup modal detail unit"
-                disabled={saving}
-              >
-                <X size={18} />
-              </button>
             </div>
 
-            <div className="px-6 py-4">
-              <div className="grid gap-3 sm:grid-cols-2">
+            <div className="px-6 py-6 overflow-y-auto">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Input
                   label="Blok / Tower"
                   icon={<Home size={16} />}
                   value={rumahDraft.blok}
                   onChange={(event) => setRumahDraft((prev) => ({ ...prev, blok: event.target.value }))}
                   placeholder="Contoh: Blok A / Tower A"
+                  className="py-2.5"
                 />
                 <Input
                   label="Nomor Rumah / Unit"
@@ -415,16 +445,17 @@ export default function RumahManagementPanel() {
                   value={rumahDraft.nomor}
                   onChange={(event) => setRumahDraft((prev) => ({ ...prev, nomor: event.target.value }))}
                   placeholder="Contoh: 12 / A-12"
+                  className="py-2.5"
                 />
               </div>
 
-              <div className="mt-4">
-                <div className="mb-3 rounded-xl border border-border-light bg-bg-header px-3 py-2 text-sm text-text-muted">
-                  Kode Unit: <span className="font-semibold text-text-main">{rumahDraft.blok || '-'}-{rumahDraft.nomor || '-'}</span>
+              <div className="mt-5">
+                <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary-dark shadow-sm">
+                  Kode Unit Terbentuk: <span className="font-bold">{rumahDraft.blok || '-'} - {rumahDraft.nomor || '-'}</span>
                 </div>
 
                 <Select
-                  label="Pemetaan Warga"
+                  label="Pemetaan Warga Penghuni"
                   icon={<UserRoundSearch size={16} />}
                   value={rumahDraft.userId}
                   onChange={(event) => setRumahDraft((prev) => ({ ...prev, userId: event.target.value }))}
@@ -435,16 +466,17 @@ export default function RumahManagementPanel() {
                       label: `${item.name ?? '-'} (${item.email ?? '-'})`,
                     })),
                   ]}
+                  className="py-2.5"
                 />
-                <p className="mt-1 text-xs text-text-muted">Pilih dari daftar warga yang sudah terdaftar di sistem.</p>
+                <p className="mt-1.5 text-xs text-text-muted">Pilih dari daftar warga yang sudah terdaftar di sistem.</p>
 
                 {rumahDraft.penghuniAktif.length > 0 ? (
-                  <div className="mt-3 rounded-xl border border-border-light bg-bg-muted p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-text-muted">Penghuni Saat Ini</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-4 rounded-xl border border-border-light bg-bg-card shadow-sm p-4">
+                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-text-muted">Penghuni Saat Ini</p>
+                    <div className="mt-2.5 flex flex-wrap gap-2">
                       {rumahDraft.penghuniAktif.map((item) => (
-                        <Badge key={item.id} variant="primary" className="gap-1">
-                          <Users size={12} />
+                        <Badge key={item.id} variant="primary" className="gap-1.5 px-3 py-1 shadow-sm">
+                          <Users size={14} />
                           {item.name ?? item.email ?? item.id}
                         </Badge>
                       ))}
@@ -454,43 +486,57 @@ export default function RumahManagementPanel() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-border-light px-6 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-border-light px-6 py-5 bg-bg-card shrink-0">
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => !saving && setRumahModalOpen(false)}
                 disabled={saving}
+                className="font-bold text-text-muted hover:text-text-main"
               >
                 Batal
               </Button>
               <Button
                 onClick={saveRumah}
                 disabled={saving}
+                className="bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-6 shadow-md"
               >
                 {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
               </Button>
             </div>
-
-            <div className="border-t border-border-light bg-bg-muted px-6 py-4">
-              <p className="text-xs text-text-muted text-center italic">
+            
+            <div className="border-t border-border-light bg-primary/5 px-6 py-4 shrink-0">
+              <p className="text-xs text-primary-dark text-center">
                 Menghubungkan warga ke unit akan memberikan akses notifikasi paket dan akses area digital gedung.
               </p>
             </div>
-          </Card>
+          </div>
         </div>
       ) : null}
 
       {deleteTarget ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
-          <Card className="w-full max-w-md p-5 border-danger-border shadow-card">
-            <h2 className="text-xl font-bold text-text-main">Konfirmasi Hapus Unit</h2>
-            <p className="mt-3 text-sm text-text-muted">
-              Anda akan menghapus unit <span className="font-semibold">{deleteTarget.blok}-{deleteTarget.nomor}</span>.
-            </p>
-            <div className="mt-4 flex justify-end gap-2">
+          <div className="w-full max-w-md overflow-hidden shadow-2xl rounded-3xl border-0 bg-bg-card">
+            <div className="bg-danger/10 p-6 flex flex-col items-center text-center">
+              <div className="flex size-14 items-center justify-center rounded-full bg-danger/20 text-danger mb-4 shadow-inner">
+                <Trash2 size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-danger-dark">Konfirmasi Hapus Unit</h2>
+              <p className="mt-2 text-sm text-danger-dark/80">
+                Anda akan menghapus unit secara permanen.
+              </p>
+            </div>
+            <div className="px-6 py-6 text-center">
+              <p className="text-text-main text-base">
+                Apakah Anda yakin ingin menghapus unit <span className="font-bold text-lg block mt-2 text-danger">{deleteTarget.blok} - {deleteTarget.nomor}</span>
+              </p>
+              <p className="text-sm text-text-muted mt-2">Data yang sudah dihapus tidak dapat dikembalikan.</p>
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-border-light bg-bg-card px-6 py-5">
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => !deleting && setDeleteTarget(null)}
                 disabled={deleting}
+                className="font-bold text-text-muted hover:text-text-main"
               >
                 Batal
               </Button>
@@ -498,13 +544,15 @@ export default function RumahManagementPanel() {
                 variant="danger"
                 onClick={confirmDeleteRumah}
                 disabled={deleting}
+                className="font-bold py-2.5 px-6 shadow-md"
               >
                 {deleting ? 'Menghapus...' : 'Ya, Hapus'}
               </Button>
             </div>
-          </Card>
+          </div>
         </div>
       ) : null}
-    </section>
+      </div>
+    </div>
   );
 }

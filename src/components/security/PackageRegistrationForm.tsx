@@ -112,20 +112,27 @@ export default function PackageRegistrationForm() {
   };
 
   return (
-    <Card className="w-full max-w-3xl overflow-hidden shadow-card">
-      <div className="relative p-6 md:p-10">
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Package className="size-8" />
+    <div className="w-full max-w-3xl overflow-hidden shadow-2xl rounded-3xl border-0 bg-bg-card">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden bg-primary px-6 py-10 sm:px-12 text-center">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-secondary/10 blur-3xl"></div>
+        <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+        
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-white/10 text-white shadow-inner border border-white/20 backdrop-blur-sm">
+            <Package className="size-8" strokeWidth={1.5} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-text-main md:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
             Registrasi Paket Baru
           </h1>
-          <p className="mt-2 text-text-muted">
-            Input data kedatangan paket untuk sistem notifikasi otomatis warga
+          <p className="mt-3 text-sm leading-relaxed text-blue-100/90 max-w-md">
+            Input data kedatangan paket dengan lengkap. Sistem akan otomatis mengirimkan notifikasi ke perangkat warga terkait.
           </p>
         </div>
+      </div>
 
+      <div className="p-6 md:p-10">
         <form onSubmit={handleSubmit} className="space-y-8">
           <Input
             label="Nomor Resi / AWB"
@@ -280,6 +287,6 @@ export default function PackageRegistrationForm() {
           </div>
         </form>
       </div>
-    </Card>
+    </div>
   );
 }
