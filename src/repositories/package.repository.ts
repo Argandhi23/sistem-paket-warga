@@ -70,6 +70,23 @@ export class PackageRepository {
     });
   }
 
+  static async handoverPackage(id: string, data: {
+    pickedUpBy: string;
+    penaltyAmount: number;
+    penaltyPaid: boolean;
+  }) {
+    return await prisma.package.update({
+      where: { id },
+      data: {
+        status: PackageStatus.DELIVERED_TO_WARGA,
+        pickedUpAt: new Date(),
+        pickedUpBy: data.pickedUpBy,
+        penaltyAmount: data.penaltyAmount,
+        penaltyPaid: data.penaltyPaid,
+      },
+    });
+  }
+
   static async updateExpiredPackages() {
     const thresholdDate = getExpiryThresholdDate();
 
