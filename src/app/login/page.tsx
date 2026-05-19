@@ -171,7 +171,7 @@ export default function LoginPage() {
               <div className="space-y-1">
                 <div className="flex justify-between items-center mb-1">
                   <label htmlFor="password" className="text-sm font-bold text-gray-900">Password</label>
-                  <button type="button" onClick={() => setStatusMessage("Fitur Lupa Password belum tersedia.")} className="text-sm font-bold text-amber-500 hover:text-amber-600 transition-colors">
+                  <button type="button" onClick={() => setStatusMessage("Fitur Lupa Password belum tersedia.")} className="text-sm font-bold text-gray-500 hover:text-gray-600 transition-colors">
                     Lupa Password?
                   </button>
                 </div>

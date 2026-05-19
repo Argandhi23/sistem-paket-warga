@@ -1,6 +1,6 @@
 import { PackageRepository } from '@/repositories/package.repository';
 import { ApiError } from '@/lib/custom-error';
-import { PACKAGE_EXPIRY_DAYS } from '@/lib/expiry';
+import { calculatePenalty as getPenaltyInfo } from '@/utils/penalty';
 
 export class PackageService {
   static async listForAdmin(params: { 
@@ -41,7 +41,6 @@ export class PackageService {
       throw new ApiError(400, 'Nomor unit rumah/apartemen wajib diisi');
     }
 
-    // Panggil repository untuk simpan ke database
     const newPackage = await PackageRepository.create({
       courierName: payload.courierName,
       recipientName: payload.recipientName,
@@ -63,7 +62,6 @@ export class PackageService {
       throw new ApiError(400, 'User tidak terasosiasi dengan nomor unit rumah manapun');
     }
 
-    // Menggunakan findWithFilters karena findByUnit sudah dihapus di repository
     return await PackageRepository.findWithFilters({
       unitNumber: unitNumber,
       status: 'SEMUA',
@@ -71,17 +69,24 @@ export class PackageService {
     });
   }
 
-  static calculatePenaltyFromDays(hariTerlambat: number): number {
-    return hariTerlambat * 2000;
+  static calculatePenalty(receivedAt: Date | string): number {
+    const info = getPenaltyInfo(receivedAt);
+    return info.amount;
   }
 
-  static calculatePenalty(receivedAt: Date): number {
-    const today = new Date();
-    const diffTime = today.getTime() - receivedAt.getTime();
-    if (diffTime < 0) return 0;
-    
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const hariTerlambat = Math.max(0, diffDays - PACKAGE_EXPIRY_DAYS);
-    return this.calculatePenaltyFromDays(hariTerlambat);
+  static async handoverPackage(id: string, payload: {
+    pickedUpBy: string;
+    penaltyAmount: number;
+    penaltyPaid: boolean;
+  }) {
+    if (!payload.pickedUpBy.trim()) {
+      throw new ApiError(400, 'Nama pengambil wajib diisi');
+    }
+
+    return await PackageRepository.handoverPackage(id, {
+      pickedUpBy: payload.pickedUpBy.trim(),
+      penaltyAmount: payload.penaltyAmount,
+      penaltyPaid: payload.penaltyPaid,
+    });
   }
 }
