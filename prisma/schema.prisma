@@ -41,6 +41,7 @@ model User {
 
   packages         Package[] @relation("WargaPackages")
   recordedPackages Package[] @relation("SecurityRecordedPackages")
+  activityLogs     ActivityLog[]
 }
 
 model Rumah {
@@ -101,4 +102,18 @@ model Package {
 
   securityId     String
   security       User          @relation("SecurityRecordedPackages", fields: [securityId], references: [id])
+}
+
+// 🌟 TABEL BARU UNTUK TIKET JIRA: ACTIVITY LOG (AUDIT TRAIL)
+model ActivityLog {
+  id          String   @id @default(uuid())
+  action      String   // Contoh: "CREATE_PACKAGE", "UPDATE_PACKAGE_STATUS"
+  entityType  String   // Contoh: "PACKAGE", "USER"
+  entityId    String   // ID dari entitas yang dimodifikasi
+  details     String?  // Informasi tambahan (bisa JSON string)
+  
+  userId      String?  // Siapa yang melakukan (optional misal sistem yang melakukan)
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
 }
