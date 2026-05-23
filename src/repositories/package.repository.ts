@@ -116,9 +116,93 @@ export class PackageRepository {
     });
   }
 
-  static async delete(id: string) {
-    return await prisma.package.delete({
-      where: { id },
+  static async getDailyVolume(days: number = 7) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const logs = await prisma.package.findMany({
+      where: {
+        receivedAt: {
+          gte: startDate,
+        },
+      },
+      select: {
+        receivedAt: true,
+        status: true,
+        pickedUpAt: true,
+      },
     });
+
+    const dailyData: Record<string, { date: string; entry: number; pickup: number }> = {};
+    
+    for (let i = 0; i < days; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().split('T')[0];
+      dailyData[dateKey] = { date: dateKey, entry: 0, pickup: 0 };
+    }
+
+    logs.forEach((log) => {
+      const entryKey = log.receivedAt.toISOString().split('T')[0];
+      if (dailyData[entryKey]) {
+        dailyData[entryKey].entry++;
+      }
+      if (log.pickedUpAt) {
+        const pickupKey = log.pickedUpAt.toISOString().split('T')[0];
+        if (dailyData[pickupKey]) {
+          dailyData[pickupKey].pickup++;
+        }
+      }
+    });
+
+    return Object.values(dailyData)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  static async getAnalyticsSummary() {
+    const [byBlock, byStatus, monthlyPenalty] = await Promise.all([
+      // 1. Distribusi per Blok (Unit format assumed: BLOK-NOMOR)
+      prisma.package.groupBy({
+        by: ['unitNumber'],
+        _count: { _all: true },
+      }),
+      // 2. Status Saat Ini
+      prisma.package.groupBy({
+        by: ['status'],
+        _count: { _all: true },
+      }),
+      // 3. Riwayat Denda (Basic grouping by date)
+      prisma.package.findMany({
+        where: { penaltyAmount: { gt: 0 } },
+        select: { pickedUpAt: true, penaltyAmount: true }
+      })
+    ]);
+
+    // Process blocks in memory
+    const blockMap: Record<string, number> = {};
+    byBlock.forEach(item => {
+      const block = item.unitNumber.split('-')[0] || 'Lainnya';
+      blockMap[block] = (blockMap[block] || 0) + item._count._all;
+    });
+
+    // Process monthly penalty
+    const monthMap: Record<string, number> = {
+      'Jan': 0, 'Feb': 0, 'Mar': 0, 'Apr': 0, 'Mei': 0, 'Jun': 0,
+      'Jul': 0, 'Agu': 0, 'Sep': 0, 'Okt': 0, 'Nov': 0, 'Des': 0
+    };
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    
+    monthlyPenalty.forEach(p => {
+      if (p.pickedUpAt) {
+        const m = p.pickedUpAt.getMonth();
+        monthMap[monthNames[m]] += p.penaltyAmount;
+      }
+    });
+
+    return {
+      distributionByBlock: Object.entries(blockMap).map(([name, value]) => ({ name, value })),
+      statusStats: byStatus.map(s => ({ name: s.status, value: s._count._all })),
+      penaltyHistory: Object.entries(monthMap).map(([name, value]) => ({ name, value }))
+    };
   }
 }
