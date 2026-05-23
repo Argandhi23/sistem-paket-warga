@@ -5,9 +5,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { serverApiFetch } from '@/lib/api-client';
 import PackageFilter from '@/components/shell/PackageFilter';
-import { Filter, PackageCheck, ShieldCheck, TimerReset } from 'lucide-react';
+import { Filter, PackageCheck, Search, ChevronRight, Box, Clock, CreditCard, History, X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 
 type PaketPageProps = {
   searchParams?: Promise<{ 
@@ -17,6 +18,7 @@ type PaketPageProps = {
     startDate?: string; 
     endDate?: string;
     showFilter?: string;
+    unit?: string;
   }>;
 };
 
@@ -45,7 +47,8 @@ export default async function AdminPaketPage({ searchParams }: PaketPageProps) {
   const courierFilter = params.courier || '';
   const startFilter = params.startDate || '';
   const endFilter = params.endDate || '';
-  const isFilterVisible = params.showFilter === 'true' || !!(courierFilter || startFilter || endFilter);
+  const unitFilter = params.unit || '';
+  const isFilterVisible = params.showFilter === 'true' || !!(courierFilter || startFilter || endFilter || unitFilter);
 
   const query = new URLSearchParams({
     status: activeStatus,
@@ -53,126 +56,156 @@ export default async function AdminPaketPage({ searchParams }: PaketPageProps) {
     ...(courierFilter && { courier: courierFilter }),
     ...(startFilter && { startDate: startFilter }),
     ...(endFilter && { endDate: endFilter }),
+    ...(unitFilter && { unit: unitFilter }),
   }).toString();
 
-  const { data: daftarPaket = [] } = await serverApiFetch(`/api/packages?${query}`);
+  // 1. Fetch data paket via API
+  const res = await serverApiFetch(`/api/packages?${query}`);
+  const daftarPaket = (res.data || []) as any[];
+  const error = !res.success ? res.message : null;
+
+  // 2. Fetch stats via API
+  const statsRes = await serverApiFetch('/api/packages/stats');
+  const stats = statsRes.data || { total: 0, pickedUp: 0, pending: 0, totalPenalty: 0 };
 
   return (
     <AppShell active="paket">
-      <div className="flex flex-col gap-8 pb-8">
-        {/* Premium Hero Banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-8 shadow-2xl sm:px-10 sm:py-12">
-          {/* Decorative Elements */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-secondary/10 blur-3xl"></div>
-          
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="max-w-2xl">
-              <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-                Manajemen Paket
-              </h1>
-              <p className="mt-3 text-sm leading-relaxed text-blue-100/90 md:text-base">
-                Pantau seluruh riwayat logistik masuk dan keluar. Sistem mencatat jejak audit untuk setiap status paket secara otomatis.
-              </p>
+      <div className="flex flex-col gap-6">
+        {/* Breadcrumbs & Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold text-text-muted uppercase tracking-widest mb-1">
+              <span>Daftar Paket</span>
+              <ChevronRight size={12} />
+              <span className="text-primary">Riwayat Paket</span>
             </div>
-            
-            <Link href={`/${session?.user?.role?.toLowerCase()}/paket/tambah`} className="shrink-0">
-              <Button className="w-full sm:w-auto bg-secondary hover:bg-secondary/90 text-secondary-dark font-bold border-0 shadow-lg px-6 py-3 rounded-xl transition-all hover:scale-105">
-                + Input Paket Baru
-              </Button>
-            </Link>
+            <h1 className="text-3xl font-black text-text-main tracking-tight">Riwayat Paket</h1>
+            <p className="text-sm text-text-muted mt-1">Kelola dan pantau seluruh data paket yang masuk dan keluar di wilayah perumahan.</p>
           </div>
+          <Link href={`/${session?.user?.role?.toLowerCase()}/paket/tambah`}>
+             <Button variant="secondary" className="rounded-xl px-6 py-3 shadow-lg shadow-secondary/20 gap-2">
+               <PackageCheck size={18} />
+               + Paket Baru
+             </Button>
+          </Link>
         </div>
 
-        <div className="px-1">
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <div className="inline-flex rounded-full bg-bg-card p-1 shadow-sm border border-border-light">
-              <Link
-                href={statusLink('SEMUA', activeSort)}
-                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                  activeStatus === 'SEMUA' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:text-primary'
-                }`}
-              >
-                Semua
-              </Link>
-              <Link
-                href={statusLink('RECEIVED_BY_SECURITY', activeSort)}
-                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                  activeStatus === 'RECEIVED_BY_SECURITY' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:text-primary'
-                }`}
-              >
-                Menunggu Pengambilan
-              </Link>
-              <Link
-                href={statusLink('DELIVERED_TO_WARGA', activeSort)}
-                className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-all ${
-                  activeStatus === 'DELIVERED_TO_WARGA' ? 'bg-primary text-white shadow-md' : 'text-text-muted hover:text-primary'
-                }`}
-              >
-                Sudah Diambil
-              </Link>
+        {/* Stats Grid - Matching Image 4 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-5 border-border-light bg-bg-card relative overflow-hidden group shadow-sm">
+            <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
+              <Box size={48} className="text-primary" />
             </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-1">Total Paket</p>
+            <p className="text-3xl font-black text-text-main">{stats.total}</p>
+          </Card>
+          
+          <Card className="p-5 border-emerald-100 bg-emerald-50/20 relative overflow-hidden group shadow-sm">
+            <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
+              <CheckCircle2 size={48} className="text-emerald-600" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-700/70 mb-1">Sudah Diambil</p>
+            <p className="text-3xl font-black text-emerald-700">{stats.pickedUp}</p>
+          </Card>
 
-            <div className="flex items-center gap-2 ml-auto">
-              <Link 
-                href={`/admin/paket?showFilter=${!isFilterVisible}`}
-                className={`flex items-center justify-center size-10 rounded-full border transition-all ${
-                  isFilterVisible 
-                    ? 'text-primary border-primary bg-primary/5 shadow-inner' 
-                    : 'bg-bg-card text-text-muted border-border-light hover:text-primary hover:bg-bg-sidebar shadow-sm'
-                }`}
-                title="Toggle Advanced Filter"
-              >
-                <Filter size={18} />
-              </Link>
+          <Card className="p-5 border-secondary/20 bg-secondary/5 relative overflow-hidden group shadow-sm">
+            <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
+              <Clock size={48} className="text-secondary" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-secondary-dark/70 mb-1">Menunggu</p>
+            <p className="text-3xl font-black text-secondary-dark">{stats.pending}</p>
+          </Card>
+
+          <Card className="p-5 border-primary/20 bg-primary/5 relative overflow-hidden group shadow-sm">
+            <div className="absolute right-0 top-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
+              <CreditCard size={48} className="text-primary" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70 mb-1">Total Denda</p>
+            <p className="text-3xl font-black text-primary">Rp {(stats.totalPenalty || 0).toLocaleString('id-ID')}</p>
+          </Card>
+        </div>
+
+        {/* Filter Section */}
+        <Card className="p-4 border-border-light shadow-sm bg-white">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="relative flex-1 group">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
+               <input 
+                  type="text" 
+                  placeholder="Cari berdasarkan No. Resi, Rumah, atau Kurir..."
+                  className="w-full pl-10 pr-4 py-3 bg-bg-muted/50 rounded-xl border border-border-light outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all text-sm font-medium"
+               />
+            </div>
+            <div className="flex items-center gap-2">
+               <Link href={`/admin/paket?showFilter=${!isFilterVisible}`}>
+                  <Button variant="outline" className={`gap-2 rounded-xl py-3 border-border-main ${isFilterVisible ? 'bg-primary/5 border-primary text-primary' : 'text-text-muted'}`}>
+                    <Filter size={18} />
+                    Filter
+                  </Button>
+               </Link>
             </div>
           </div>
 
           {isFilterVisible && (
-            <div className="mb-6 rounded-2xl bg-bg-card shadow-sm border border-border-light p-1">
-              <PackageFilter baseUrl="/admin/paket" />
+            <div className="mt-4 pt-4 border-t border-border-light">
+               <PackageFilter baseUrl="/admin/paket" />
             </div>
           )}
 
-          <div className="rounded-2xl bg-bg-card shadow-md border border-border-light overflow-hidden">
-            <PackageManagementTable rows={daftarPaket as any} />
+          {/* Active Status Tabs */}
+          <div className="flex items-center gap-4 mt-4 text-xs font-bold border-t border-border-light pt-4">
+             <span className="text-text-muted uppercase tracking-widest mr-2">Status:</span>
+             <div className="flex gap-1 bg-bg-muted p-1 rounded-lg">
+                {[
+                  { key: 'SEMUA', label: 'Semua Status' },
+                  { key: 'RECEIVED_BY_SECURITY', label: 'Menunggu Pengambilan' },
+                  { key: 'DELIVERED_TO_WARGA', label: 'Sudah Diambil' }
+                ].map((s) => (
+                  <Link 
+                    key={s.key} 
+                    href={statusLink(s.key as any, activeSort)}
+                    className={`px-3 py-1.5 rounded-md transition-all ${activeStatus === s.key ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-main'}`}
+                  >
+                    {s.label}
+                  </Link>
+                ))}
+             </div>
           </div>
+        </Card>
 
-          {/* Premium Info Cards */}
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            <Card className="relative overflow-hidden p-6 border-0 shadow-md bg-bg-card group hover:-translate-y-1 hover:shadow-lg transition-all rounded-2xl">
-              <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-primary/5 transition-transform duration-500 group-hover:scale-150"></div>
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <div>
-                  <PackageCheck className="h-8 w-8 text-primary mb-3" strokeWidth={1.5} />
-                  <p className="text-sm font-bold uppercase tracking-widest text-primary">Otomatisasi</p>
-                  <p className="mt-2 text-sm text-text-muted">Input paket otomatis memicu notifikasi push ke perangkat warga.</p>
-                </div>
-              </div>
-            </Card>
+        {/* Results Info */}
+        <div className="flex items-center justify-between">
+           <p className="text-xs font-medium text-text-muted">
+             Menampilkan <span className="font-bold text-text-main">{daftarPaket.length}</span> data riwayat terbaru
+           </p>
+           {activeStatus !== 'SEMUA' && (
+              <Badge variant="primary" className="gap-2 lowercase bg-primary/5 border border-primary/10 pl-3 pr-1 py-1">
+                status: {activeStatus === 'RECEIVED_BY_SECURITY' ? 'menunggu' : 'diambil'}
+                <Link href={statusLink('SEMUA', activeSort)} className="hover:bg-primary/20 rounded-full p-0.5 transition-colors">
+                  <X size={10} />
+                </Link>
+              </Badge>
+           )}
+        </div>
 
-            <Card className="relative overflow-hidden p-6 border-0 shadow-md bg-bg-card group hover:-translate-y-1 hover:shadow-lg transition-all rounded-2xl">
-              <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-secondary/10 transition-transform duration-500 group-hover:scale-150"></div>
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <div>
-                  <ShieldCheck className="h-8 w-8 text-secondary-dark mb-3" strokeWidth={1.5} />
-                  <p className="text-sm font-bold uppercase tracking-widest text-secondary-dark">Audit Sistem</p>
-                  <p className="mt-2 text-sm text-text-muted">Setiap paket tercatat beserta nama satpam yang bertugas saat itu.</p>
-                </div>
-              </div>
-            </Card>
+        {/* Table / Content */}
+        <div className="rounded-2xl bg-bg-card shadow-card border border-border-light overflow-hidden">
+          <PackageManagementTable 
+            rows={daftarPaket} 
+            error={error}
+            isLoading={false} 
+          />
+        </div>
 
-            <Card className="relative overflow-hidden p-6 border-0 shadow-md bg-bg-card group hover:-translate-y-1 hover:shadow-lg transition-all rounded-2xl">
-              <div className="absolute right-0 top-0 h-24 w-24 -translate-y-8 translate-x-8 rounded-full bg-danger/5 transition-transform duration-500 group-hover:scale-150"></div>
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <div>
-                  <TimerReset className="h-8 w-8 text-danger mb-3" strokeWidth={1.5} />
-                  <p className="text-sm font-bold uppercase tracking-widest text-danger">Kebijakan Simpan</p>
-                  <p className="mt-2 text-sm text-text-muted">Paket yang tidak diambil lebih dari 7 hari ditandai 'Overdue'.</p>
-                </div>
-              </div>
-            </Card>
-          </div>
+        {/* Pagination Placeholder */}
+        <div className="flex items-center justify-center gap-2 mt-4">
+           <Button variant="outline" size="icon" className="rounded-lg border-border-light text-text-muted disabled:opacity-30" disabled>&lt;</Button>
+           <Button size="icon" className="rounded-lg bg-primary text-white font-bold text-xs h-9 w-9 shadow-md">1</Button>
+           <Button variant="outline" size="icon" className="rounded-lg border-border-light text-text-muted text-xs h-9 w-9">2</Button>
+           <Button variant="outline" size="icon" className="rounded-lg border-border-light text-text-muted text-xs h-9 w-9">3</Button>
+           <span className="text-text-muted px-2">...</span>
+           <Button variant="outline" size="icon" className="rounded-lg border-border-light text-text-muted text-xs h-9 w-9">43</Button>
+           <Button variant="outline" size="icon" className="rounded-lg border-border-light text-text-muted h-9 w-9">&gt;</Button>
         </div>
       </div>
     </AppShell>

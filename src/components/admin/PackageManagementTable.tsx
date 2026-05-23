@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  Package,
   Pencil,
   Trash2,
   X,
@@ -10,7 +9,8 @@ import {
   Barcode,
   User2,
   Home,
-  Truck
+  Truck,
+  ChevronRight
 } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,10 @@ import { Card, CardHeader, CardFooter } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { useSession } from 'next-auth/react';
 import { PackageDetailModal } from '@/components/modal/PackageDetailModal';
+import { TableSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorBanner } from '@/components/ui/ErrorState';
+import { calculatePenalty, formatRupiah } from '@/utils/penalty';
 
 type PackageItem = {
   id: string;
@@ -27,7 +31,7 @@ type PackageItem = {
   courierName: string;
   recipientName: string;
   unitNumber: string;
-  status: 'RECEIVED_BY_SECURITY' | 'DELIVERED_TO_WARGA' | string;
+  status: 'RECEIVED_BY_SECURITY' | 'DELIVERED_TO_WARGA' | 'EXPIRED' | string;
   receivedAt: Date | string;
   pickedUpAt?: Date | string | null;
   pickedUpBy?: string | null;
@@ -40,9 +44,20 @@ type PackageItem = {
 type PackageManagementTableProps = {
   rows: PackageItem[];
   hideActions?: boolean;
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  onResetFilter?: () => void;
 };
 
-export default function PackageManagementTable({ rows, hideActions = false }: PackageManagementTableProps) {
+export default function PackageManagementTable({ 
+  rows = [], 
+  hideActions = false, 
+  isLoading = false,
+  error = null,
+  onRetry,
+  onResetFilter
+}: PackageManagementTableProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
@@ -57,14 +72,22 @@ export default function PackageManagementTable({ rows, hideActions = false }: Pa
       return (
         <Badge variant="primary" className="gap-1.5">
           <Clock className="h-3.5 w-3.5" />
-          Di Pos Satpam
+          Menunggu
+        </Badge>
+      );
+    }
+    if (status === 'DELIVERED_TO_WARGA') {
+      return (
+        <Badge variant="success" className="gap-1.5 shadow-sm border border-emerald-100">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Diambil
         </Badge>
       );
     }
     return (
-      <Badge variant="success" className="gap-1.5">
-        <CheckCircle2 className="h-3.5 w-3.5" />
-        Sudah Diambil
+      <Badge variant="danger" className="gap-1.5">
+        <X className="h-3.5 w-3.5" />
+        Expired
       </Badge>
     );
   };
@@ -128,86 +151,125 @@ export default function PackageManagementTable({ rows, hideActions = false }: Pa
   }
 
   return (
-    <>
-      <div className="table-container">
-        <table className="min-w-[1000px] w-full text-left">
+    <div className="space-y-4">
+      {error && <ErrorBanner message={error} onRetry={onRetry} />}
+      
+      <div className="table-container shadow-soft border-border-light bg-white">
+        <table className="min-w-[1200px] w-full text-left">
           <thead className="table-head">
             <tr className="border-b border-border-light">
-              <th className="px-6 py-4 font-semibold text-center">No</th>
-              <th className="px-6 py-4 font-semibold text-center">Nomor Resi</th>
-              <th className="px-6 py-4 font-semibold text-center">Kurir</th>
-              <th className="px-6 py-4 font-semibold text-center">Blok & Unit</th>
-              <th className="px-6 py-4 font-semibold text-center">Tanggal Masuk</th>
-              <th className="px-6 py-4 font-semibold text-center">Status</th>
-              <th className="px-6 py-4 font-semibold text-center">Aksi</th>
+              <th className="px-6 py-4 font-semibold text-center w-16 text-text-muted text-[10px] uppercase tracking-widest">No</th>
+              <th className="px-6 py-4 font-semibold text-text-muted text-[10px] uppercase tracking-widest">Nomor Resi</th>
+              <th className="px-6 py-4 font-semibold text-text-muted text-[10px] uppercase tracking-widest">Kurir</th>
+              <th className="px-6 py-4 font-semibold text-center text-text-muted text-[10px] uppercase tracking-widest">Rumah Tujuan</th>
+              <th className="px-6 py-4 font-semibold text-center text-text-muted text-[10px] uppercase tracking-widest">Tanggal Masuk</th>
+              <th className="px-6 py-4 font-semibold text-center text-text-muted text-[10px] uppercase tracking-widest">Tanggal Diambil</th>
+              <th className="px-6 py-4 font-semibold text-center text-text-muted text-[10px] uppercase tracking-widest">Status</th>
+              <th className="px-6 py-4 font-semibold text-center text-text-muted text-[10px] uppercase tracking-widest">Denda</th>
+              <th className="px-6 py-4 font-semibold text-center text-text-muted text-[10px] uppercase tracking-widest">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
+            {isLoading ? (
               <tr>
-                <td colSpan={7} className="px-6 py-20 text-center">
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-bg-header text-primary-light">
-                      <Package className="h-10 w-10" />
-                    </div>
-                    <p className="text-xl font-bold text-text-main">Log Paket Kosong</p>
-                    <p className="mt-1 text-text-muted">Belum ada data paket yang tercatat di sistem saat ini.</p>
-                  </div>
+                <td colSpan={9} className="p-0">
+                  <TableSkeleton rows={5} />
+                </td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="p-0">
+                  <EmptyState onReset={onResetFilter} />
                 </td>
               </tr>
             ) : (
               rows.map((pkg, index) => {
+                const penalty = calculatePenalty(pkg.receivedAt);
+                const isPickedUp = pkg.status === 'DELIVERED_TO_WARGA';
+
                 return (
                   <tr key={pkg.id} className="border-b border-border-light text-text-body last:border-b-0 transition-colors hover:bg-bg-header/50">
-                    <td className="px-6 py-4 text-center font-medium text-text-muted">
+                    <td className="px-6 py-4 text-center font-medium text-text-muted text-sm">
                       {index + 1}
                     </td>
-                    <td className="px-6 py-4 font-bold text-text-main">
-                      <p className='text-center'>{pkg.trackingNumber || 'Tanpa Resi'}</p>
+                    <td className={`px-6 py-4 font-bold tracking-tight text-sm ${isPickedUp ? 'text-text-muted/50' : 'text-text-main'}`}>
+                      {pkg.trackingNumber || 'Tanpa Resi'}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 justify-center">
-                        <Truck size={14} className="text-primary" />
-                        <span className="font-medium">{pkg.courierName}</span>
+                      <div className="flex items-center gap-2">
+                        <Truck size={14} className="text-primary/60" />
+                        <span className="font-medium text-sm">{pkg.courierName}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-bold text-text-body text-center">
+                    <td className="px-6 py-4 font-bold text-text-body text-center text-sm">
                       {pkg.unitNumber}
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="font-medium text-text-body text-center">
+                    <td className="px-6 py-4 text-center">
+                      <p className="font-medium text-text-body text-sm">
                         {new Date(pkg.receivedAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </p>
+                      <p className="text-[10px] text-text-muted">
+                        {new Date(pkg.receivedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {pkg.pickedUpAt ? (
+                        <>
+                          <p className="font-medium text-text-body text-sm">
+                            {new Date(pkg.pickedUpAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                          <p className="text-[10px] text-text-muted">
+                            {new Date(pkg.pickedUpAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                          </p>
+                        </>
+                      ) : (
+                        <span className="text-text-muted">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {renderStatusBadge(pkg.status)}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2 text-text-muted">
+                    <td className="px-6 py-4 text-center">
+                      {isPickedUp ? (
+                        pkg.penaltyAmount ? (
+                          <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Lunas</span>
+                        ) : (
+                          <span className="text-text-muted">—</span>
+                        )
+                      ) : penalty.amount > 0 ? (
+                        <span className="font-black text-danger text-sm">{formatRupiah(penalty.amount)}</span>
+                      ) : (
+                        <span className="text-text-muted">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           type="button"
                           onClick={() => setSelectedPackage(pkg)}
-                          className="text-primary font-bold text-xs hover:underline mr-2"
+                          className="text-primary font-bold text-xs hover:underline flex items-center gap-1 group"
                         >
-                          Detail
+                          Detail <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                         </button>
                         {!hideActions && (
-                          <>
+                          <div className="flex items-center gap-1 border-l border-border-light pl-2 ml-1">
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="icon"
                               onClick={() => setEditDraft(pkg)}
+                              className="size-8 text-text-muted hover:text-primary hover:bg-bg-header"
                             >
-                              <Pencil size={16} />
+                              <Pencil size={14} />
                             </Button>
-                            <button
-                              type="button"
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={() => setDeleteTarget(pkg)}
-                              className="rounded-full border border-danger-border bg-danger-light p-2 text-danger hover:bg-opacity-80"
+                              className="size-8 text-text-muted hover:text-danger hover:bg-danger-light"
                             >
-                              <Trash2 size={16} />
-                            </button>
-                          </>
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </td>
@@ -229,9 +291,10 @@ export default function PackageManagementTable({ rows, hideActions = false }: Pa
             trackingNumber: selectedPackage.trackingNumber || '',
             status: selectedPackage.status === 'RECEIVED_BY_SECURITY' ? 'Menunggu Pengambilan' : 'Sudah Diambil',
             courierName: selectedPackage.courierName,
+            recipientName: selectedPackage.recipientName,
             receivedAt: selectedPackage.receivedAt,
             storedAt: `Pos Security - Unit ${selectedPackage.unitNumber}`,
-            receivedBy: selectedPackage.recipientName,
+            receivedBy: selectedPackage.security?.name || 'Petugas',
             pickedUpAt: selectedPackage.pickedUpAt,
             pickedUpBy: selectedPackage.pickedUpBy,
             penaltyAmount: selectedPackage.penaltyAmount,
@@ -328,6 +391,6 @@ export default function PackageManagementTable({ rows, hideActions = false }: Pa
           </Card>
         </div>
       )}
-    </>
+    </div>
   );
 }

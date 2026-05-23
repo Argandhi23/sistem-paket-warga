@@ -63,8 +63,8 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
         router.refresh();
         onClose();
       } else {
-        const error = await response.json();
-        alert(error.message || 'Gagal memproses penyerahan paket.');
+        const errorResult = await response.json();
+        alert(errorResult.error || 'Gagal memproses penyerahan paket.');
       }
     } catch (err) {
       alert('Kesalahan koneksi.');
@@ -105,10 +105,11 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
           </div>
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-4 pt-2">
-            <DetailRow icon={<Package size={16} />} label="Penerima" value={paket.receivedBy} bold />
+            <DetailRow icon={<Package size={16} />} label="Penerima" value={paket.recipientName} bold />
             <DetailRow icon={<Calendar size={16} />} label="Waktu Kedatangan" value={dateTimeID(paket.receivedAt)} />
             <DetailRow icon={<Package size={16} />} label="Ekspedisi" value={paket.courierName} />
             <DetailRow icon={<MapPin size={16} />} label="Disimpan di" value={paket.storedAt} />
+            <DetailRow icon={<User size={16} />} label="Petugas Input" value={paket.receivedBy} />
           </div>
 
           {hasPenalty && !isPickedUp && (

@@ -90,7 +90,6 @@ export default function PackageRegistrationForm() {
           recipientName: selectedResident.name,
           unitNumber: selectedResident.unitNumber,
           wargaId: selectedResident.id,
-          securityId: session?.user?.id || 'default-security-id', 
         }),
       });
 
@@ -102,7 +101,7 @@ export default function PackageRegistrationForm() {
           router.refresh();
         }, 1500);
       } else {
-        setMessage(result.message || 'Gagal mendaftarkan paket.');
+        setMessage(result.error || 'Gagal mendaftarkan paket.');
       }
     } catch (error) {
       setMessage('Terjadi kesalahan koneksi.');
@@ -266,21 +265,22 @@ export default function PackageRegistrationForm() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-4 text-lg md:w-auto md:min-w-[300px]"
+              variant="secondary"
+              className="w-full py-4 text-lg md:w-auto md:min-w-[320px] shadow-lg shadow-secondary/20"
             >
               {isSubmitting ? (
                 <Loader2 className="size-6 animate-spin mr-2" />
               ) : (
                 <Package className="size-6 mr-2 transition-transform group-hover:rotate-12" />
               )}
-              {isSubmitting ? 'Mendaftarkan...' : 'Daftarkan Paket'}
+              {isSubmitting ? 'Mendaftarkan...' : 'Daftarkan Paket Sekarang'}
             </Button>
             
             <Button
-              variant="ghost"
+              variant="outline"
               type="button"
               onClick={() => router.back()}
-              className="text-text-muted hover:text-text-main font-bold"
+              className="w-full py-4 text-lg md:w-auto px-10 border-border-main text-text-muted hover:text-text-main font-bold"
             >
               Batal
             </Button>

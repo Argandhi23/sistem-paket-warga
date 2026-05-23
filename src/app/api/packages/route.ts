@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { PackageService } from '@/services/package.service';
-import { PackageRepository } from '@/repositories/package.repository';
 import { handleError } from '@/lib/error-handler';
 import { ApiError } from '@/lib/custom-error';
 import { getServerSession } from "next-auth";
@@ -15,7 +14,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const newPackage = await PackageService.receiveNewPackage(body);
+    
+    // SDPR-41: Gunakan securityId dari session, bukan dari client payload untuk mencegah spoofing
+    const payload = {
+      ...body,
+      securityId: session.user.id
+    };
+
+    const newPackage = await PackageService.receiveNewPackage(payload);
     
     return NextResponse.json({ success: true, data: newPackage }, { status: 201 });
   } catch (error) {
@@ -74,7 +80,8 @@ export async function PUT(request: Request) {
     
     if (!id) throw new ApiError(400, "ID paket wajib diisi.");
 
-    const updatedPackage = await PackageRepository.update(id, data);
+    // Sesuai Audit: Gunakan Service layer, jangan bypass ke Repository
+    const updatedPackage = await PackageService.updatePackage(id, data);
     return NextResponse.json({ success: true, data: updatedPackage });
   } catch (error) {
     return handleError(error);
@@ -93,7 +100,8 @@ export async function DELETE(request: Request) {
 
     if (!id) throw new ApiError(400, "ID paket wajib diisi.");
 
-    await PackageRepository.delete(id);
+    // Sesuai Audit: Gunakan Service layer, jangan bypass ke Repository
+    await PackageService.deletePackage(id);
     return NextResponse.json({ success: true, message: "Log paket berhasil dihapus." });
   } catch (error) {
     return handleError(error);
