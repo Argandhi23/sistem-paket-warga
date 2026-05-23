@@ -155,4 +155,16 @@ export class PackageService {
 
     return updatedPackage;
   }
+
+  static async getAnalytics(days: number = 30) {
+    const [dailyVolume, summary] = await Promise.all([
+      PackageRepository.getDailyVolume(days),
+      PackageRepository.getAnalyticsSummary()
+    ]);
+
+    return {
+      dailyVolume,
+      ...summary
+    };
+  }
 }
