@@ -11,8 +11,6 @@ export class PackageRepository {
     endDate?: string;
     sort?: 'asc' | 'desc';
   }) {
-    await PackageRepository.updateExpiredPackages();
-
     const where: any = {};
     if (params.unitNumber) where.unitNumber = params.unitNumber;
     if (params.status && params.status !== 'SEMUA') where.status = params.status;
@@ -41,16 +39,24 @@ export class PackageRepository {
   }
 
   static async getStats(filters: { wargaId?: string } = {}) {
-    const stats = await prisma.package.groupBy({
-      by: ['status'],
-      where: filters,
-      _count: { _all: true },
-    });
+    const [counts, aggregate] = await Promise.all([
+      prisma.package.groupBy({
+        by: ['status'],
+        where: filters,
+        _count: { _all: true },
+      }),
+      prisma.package.aggregate({
+        where: filters,
+        _sum: { penaltyAmount: true }
+      })
+    ]);
 
     return {
-      pending: stats.find(s => s.status === 'RECEIVED_BY_SECURITY')?._count._all || 0,
-      pickedUp: stats.find(s => s.status === 'DELIVERED_TO_WARGA')?._count._all || 0,
-      expired: stats.find(s => s.status === 'EXPIRED')?._count._all || 0,
+      total: counts.reduce((acc, c: any) => acc + c._count._all, 0),
+      pending: counts.find(s => s.status === 'RECEIVED_BY_SECURITY')?._count._all || 0,
+      pickedUp: counts.find(s => s.status === 'DELIVERED_TO_WARGA')?._count._all || 0,
+      expired: counts.find(s => s.status === 'EXPIRED')?._count._all || 0,
+      totalPenalty: aggregate._sum.penaltyAmount || 0,
     };
   }
 

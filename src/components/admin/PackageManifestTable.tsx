@@ -19,6 +19,7 @@ interface Package {
   pickedUpBy?: string | null;
   penaltyAmount?: number;
   penaltyPaid?: boolean;
+  security?: { name: string | null } | null;
 }
 
 export default function PackageManifestTable({ initialData }: { initialData: Package[] }) {
@@ -129,9 +130,10 @@ export default function PackageManifestTable({ initialData }: { initialData: Pac
             trackingNumber: selectedPackage.trackingNumber || '',
             status: selectedPackage.status === 'RECEIVED_BY_SECURITY' ? 'Menunggu Pengambilan' : 'Sudah Diambil',
             courierName: selectedPackage.courierName,
+            recipientName: selectedPackage.recipientName,
             receivedAt: selectedPackage.receivedAt,
             storedAt: `Pos Security - Unit ${selectedPackage.unitNumber}`,
-            receivedBy: selectedPackage.recipientName,
+            receivedBy: selectedPackage.security?.name || 'Petugas',
             pickedUpAt: selectedPackage.pickedUpAt,
             pickedUpBy: selectedPackage.pickedUpBy,
             penaltyAmount: selectedPackage.penaltyAmount,
