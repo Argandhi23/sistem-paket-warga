@@ -35,7 +35,7 @@ describe('Integration Test: API RBAC Input Paket', () => {
   afterAll(async () => {
     // Cleanup DB (Karena POST api membuat paket secara nyata, kita bersihkan di sini)
     await prisma.package.deleteMany({
-      where: { unitNumber: 'UNIT-' + uniqueSuffix }
+      where: { unitNumber: 'RBAC-UNIT-' + uniqueSuffix }
     });
     await prisma.user.delete({
       where: { id: securityId }
@@ -54,7 +54,7 @@ describe('Integration Test: API RBAC Input Paket', () => {
     const mockPayload = {
       courierName: 'JNE',
       recipientName: 'Ujian RBAC',
-      unitNumber: 'UNIT-' + uniqueSuffix,
+      unitNumber: 'RBAC-UNIT-' + uniqueSuffix,
       securityId: securityId
     };
 
@@ -71,7 +71,7 @@ describe('Integration Test: API RBAC Input Paket', () => {
     
     // Verifikasi Database: Paket tidak benar-benar tersimpan!
     const packagesInDb = await prisma.package.count({
-      where: { unitNumber: 'UNIT-' + uniqueSuffix }
+      where: { unitNumber: 'RBAC-UNIT-' + uniqueSuffix }
     });
     expect(packagesInDb).toBe(0);
   });
@@ -79,13 +79,13 @@ describe('Integration Test: API RBAC Input Paket', () => {
   it('✅ Harus menerima request (201 Created) jika role adalah SECURITY, dan simpan riil ke DB', async () => {
     // Simulasi Satpam memanggil API POST
     (getServerSession as any).mockResolvedValue({
-      user: { role: 'SECURITY', name: 'Bapak Satpam' }
+      user: { id: securityId, role: 'SECURITY', name: 'Bapak Satpam' }
     });
 
     const mockPayload = {
       courierName: 'JNE',
       recipientName: 'Ujian RBAC Sukses',
-      unitNumber: 'UNIT-' + uniqueSuffix,
+      unitNumber: 'RBAC-UNIT-' + uniqueSuffix,
       securityId: securityId
     };
 
@@ -103,7 +103,7 @@ describe('Integration Test: API RBAC Input Paket', () => {
     
     // Verifikasi Database: Paket BENAR-BENAR TERSIMPAN! (Integration test nyata)
     const packagesInDb = await prisma.package.count({
-      where: { unitNumber: 'UNIT-' + uniqueSuffix }
+      where: { unitNumber: 'RBAC-UNIT-' + uniqueSuffix }
     });
     expect(packagesInDb).toBe(1);
   });

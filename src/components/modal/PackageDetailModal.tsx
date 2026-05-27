@@ -12,6 +12,7 @@ export type PackageDetail = {
   trackingNumber: string;
   status: string;
   courierName: string;
+  recipientName: string;
   receivedAt: string | Date;
   storedAt: string; // Pos Security - Blok A
   receivedBy: string; // Penerima awal (security/admin)
