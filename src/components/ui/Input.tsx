@@ -16,7 +16,7 @@ export const Input = ({ label, icon, className = '', ...props }: InputProps) => 
           </div>
         )}
         <input
-          className={`w-full rounded-xl border border-border-light bg-bg-header py-2.5 px-4 text-sm text-text-main outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary ${icon ? 'pl-10' : ''} ${className}`}
+          className={`w-full rounded-xl border border-border-main bg-white py-2.5 px-4 text-sm text-text-main outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary ${icon ? 'pl-10' : ''} ${className}`}
           {...props}
         />
       </div>
@@ -41,7 +41,7 @@ export const Select = ({ label, icon, options, className = '', ...props }: Selec
           </div>
         )}
         <select
-          className={`w-full rounded-xl border border-border-light bg-bg-header py-2.5 px-4 text-sm text-text-main outline-none appearance-none transition-all focus:border-primary focus:ring-1 focus:ring-primary ${icon ? 'pl-10' : ''} ${className}`}
+          className={`w-full rounded-xl border border-border-main bg-white py-2.5 px-4 text-sm text-text-main outline-none appearance-none transition-all focus:border-primary focus:ring-1 focus:ring-primary ${icon ? 'pl-10' : ''} ${className}`}
           {...props}
         >
           {options.map((opt) => (

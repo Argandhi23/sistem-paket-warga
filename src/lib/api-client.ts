@@ -7,10 +7,13 @@ export async function serverApiFetch<T = any>(
   path: string, 
   options: RequestInit = {}
 ): Promise<{ data: T; success: boolean; message?: string }> {
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const reqHeaders = await headers();
+  const host = reqHeaders.get('x-forwarded-host') || reqHeaders.get('host') || 'localhost:3000';
+  const protocol = host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https';
+  const baseUrl = `${protocol}://${host}`;
   const url = `${baseUrl}${path}`;
   
-  const cookieHeader = (await headers()).get('cookie') ?? '';
+  const cookieHeader = reqHeaders.get('cookie') ?? '';
 
   try {
     const response = await fetch(url, {

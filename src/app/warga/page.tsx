@@ -34,7 +34,7 @@ export default async function WargaDashboard() {
         </div>
 
         <Card className="mt-6 border-border-light bg-bg-card/50 p-6 italic text-text-muted text-center">
-          Silakan cek menu "Paket Saya" untuk melihat daftar paket yang sudah tiba di pos satpam.
+          Silakan cek menu &quot;Paket Saya&quot; untuk melihat daftar paket yang sudah tiba di pos satpam.
         </Card>
       </section>
     </AppShell>

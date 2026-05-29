@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { usePackageRealtime } from '@/hooks/use-package-realtime';
 import { CheckCircle2, Clock, Package as PackageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { useSession } from 'next-auth/react';
+import { PackageDetailModal } from '@/components/modal/PackageDetailModal';
 
 interface Package {
   id: string;
@@ -12,10 +14,18 @@ interface Package {
   recipientName: string;
   status: string;
   unitNumber: string;
+  receivedAt: string | Date;
+  pickedUpAt?: string | Date | null;
+  pickedUpBy?: string | null;
+  penaltyAmount?: number;
+  penaltyPaid?: boolean;
+  security?: { name: string | null } | null;
 }
 
 export default function PackageManifestTable({ initialData }: { initialData: Package[] }) {
+  const { data: session } = useSession();
   const [packages, setPackages] = useState<Package[]>(initialData);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
 
   usePackageRealtime((payload) => {
     const { eventType, new: newRecord, old: oldRecord } = payload;
@@ -57,12 +67,13 @@ export default function PackageManifestTable({ initialData }: { initialData: Pac
             <th className="px-6 py-4 font-semibold">Penerima</th>
             <th className="px-6 py-4 font-semibold">Blok / No</th>
             <th className="px-6 py-4 font-semibold">Status</th>
+            <th className="px-6 py-4 font-semibold text-right">Aksi</th>
           </tr>
         </thead>
         <tbody>
           {packages.length === 0 ? (
             <tr>
-              <td colSpan={4} className="px-6 py-12 text-center">
+              <td colSpan={5} className="px-6 py-12 text-center">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <PackageIcon className="h-8 w-8 text-primary-light" />
                   <p className="text-text-muted">Belum ada data paket saat ini.</p>
@@ -94,11 +105,42 @@ export default function PackageManifestTable({ initialData }: { initialData: Pac
                 <td className="px-6 py-4">
                   {renderStatusBadge(pkg.status)}
                 </td>
+                <td className="px-6 py-4 text-right">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPackage(pkg)}
+                    className="text-primary font-bold text-xs hover:underline"
+                  >
+                    Detail
+                  </button>
+                </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+
+      {selectedPackage && (
+        <PackageDetailModal
+          open={!!selectedPackage}
+          onClose={() => setSelectedPackage(null)}
+          isSecurity={session?.user?.role === 'SECURITY' || session?.user?.role === 'ADMIN'}
+          paket={{
+            id: selectedPackage.id,
+            trackingNumber: selectedPackage.trackingNumber || '',
+            status: selectedPackage.status === 'RECEIVED_BY_SECURITY' ? 'Menunggu Pengambilan' : 'Sudah Diambil',
+            courierName: selectedPackage.courierName,
+            recipientName: selectedPackage.recipientName,
+            receivedAt: selectedPackage.receivedAt,
+            storedAt: `Pos Security - Unit ${selectedPackage.unitNumber}`,
+            receivedBy: selectedPackage.security?.name || 'Petugas',
+            pickedUpAt: selectedPackage.pickedUpAt,
+            pickedUpBy: selectedPackage.pickedUpBy,
+            penaltyAmount: selectedPackage.penaltyAmount,
+            penaltyPaid: selectedPackage.penaltyPaid,
+          }}
+        />
+      )}
     </div>
   );
 }

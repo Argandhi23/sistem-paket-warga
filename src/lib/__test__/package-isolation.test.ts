@@ -14,6 +14,7 @@ vi.mock('../../repositories/package.repository', () => ({
   PackageRepository: {
     findWithFilters: vi.fn(),
     findAll: vi.fn(),
+    updateExpiredPackages: vi.fn(),
   },
 }));
 

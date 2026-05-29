@@ -18,60 +18,55 @@ enum PackageStatus {
   EXPIRED
 }
 
-// --- MODEL USER YANG DIPERBARUI ---
+// --- MODEL USER ---
 model User {
   id            String    @id @default(uuid())
   name          String?
   email         String?   @unique
-  emailVerified DateTime? // Dibutuhkan oleh NextAuth
-  image         String?   // Dibutuhkan oleh NextAuth (untuk foto profil)
-  password      String?   // Tambahan dari kita untuk login manual (email/password)
+  emailVerified DateTime?
+  image         String?
+  password      String?
   
   role          Role      @default(WARGA)
   unitNumber    String?
   
-  // 🌟 TAMBAHAN BARU UNTUK TIKET JIRA: Relasi User ke Rumah
-  rumahId       String?   // Foreign key penghubung ke tabel Rumah
+  rumahId       String?
   rumah         Rumah?    @relation(fields: [rumahId], references: [id])
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relasi NextAuth
   accounts      Account[]
   sessions      Session[]
 
-  // Relasi Aplikasi Kita
   packages         Package[] @relation("WargaPackages")
   recordedPackages Package[] @relation("SecurityRecordedPackages")
+  activityLogs     ActivityLog[]
 }
 
-// 🌟 TABEL BARU UNTUK TIKET JIRA: RUMAH
 model Rumah {
   id        String   @id @default(uuid())
-  blok      String   // Contoh: "Blok A"
-  nomor     String   // Contoh: "12"
+  blok      String
+  nomor     String
   
-  // Relasi: 1 Rumah bisa dihuni banyak User
   penghuni  User[]   
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// --- TABEL WAJIB NEXTAUTH ---
 model Account {
   id                 String  @id @default(cuid())
   userId             String
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String?  @db.Text
+  id_token           String? @db.Text
   session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -87,7 +82,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// --- MODEL PACKAGE (TETAP SAMA) ---
 model Package {
   id             String        @id @default(uuid())
   trackingNumber String?
@@ -98,10 +92,28 @@ model Package {
   
   receivedAt     DateTime      @default(now())
   pickedUpAt     DateTime?
+  pickedUpBy     String?
+
+  penaltyAmount  Float         @default(0)
+  penaltyPaid    Boolean       @default(false)
 
   wargaId        String?
   warga          User?         @relation("WargaPackages", fields: [wargaId], references: [id])
 
   securityId     String
   security       User          @relation("SecurityRecordedPackages", fields: [securityId], references: [id])
+}
+
+// 🌟 TABEL BARU UNTUK TIKET JIRA: ACTIVITY LOG (AUDIT TRAIL)
+model ActivityLog {
+  id          String   @id @default(uuid())
+  action      String   // Contoh: "CREATE_PACKAGE", "UPDATE_PACKAGE_STATUS"
+  entityType  String   // Contoh: "PACKAGE", "USER"
+  entityId    String   // ID dari entitas yang dimodifikasi
+  details     String?  // Informasi tambahan (bisa JSON string)
+  
+  userId      String?  // Siapa yang melakukan (optional misal sistem yang melakukan)
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
 }
