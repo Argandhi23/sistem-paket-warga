@@ -20,10 +20,22 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import Link from 'next/link';
+import { calculatePenalty } from '@/utils/penalty';
 
 export default async function AdminLaporanPage() {
   const session = await getServerSession(authOptions);
-  
+
+  const packagesRes = await serverApiFetch('/api/packages?sort=terbaru');
+  const allPackages = packagesRes.data || [];
+
+  const totalPenalty = allPackages.reduce((sum: number, pkg: { receivedAt?: string | Date; status?: string }) => {
+    if (pkg.status !== 'RECEIVED_BY_SECURITY' && pkg.status !== 'DELIVERED_TO_WARGA') {
+      return sum;
+    }
+
+    return sum + calculatePenalty(pkg.receivedAt || new Date()).amount;
+  }, 0);
+
   // Fetch analytics data from our new API
   const analyticsRes = await serverApiFetch('/api/packages/analytics?days=30');
   const analytics = analyticsRes.data || {
@@ -93,7 +105,7 @@ export default async function AdminLaporanPage() {
             </div>
             <p className="text-xs font-bold uppercase tracking-wider text-text-muted mb-1">Total Denda Terkumpul</p>
             <div className="flex items-baseline gap-2">
-               <p className="text-3xl font-black text-text-main">Rp {stats.totalPenalty.toLocaleString('id-ID')}</p>
+                <p className="text-3xl font-black text-text-main">Rp {totalPenalty.toLocaleString('id-ID')}</p>
                <span className="text-[10px] text-text-muted font-bold">Bulan ini</span>
             </div>
           </Card>

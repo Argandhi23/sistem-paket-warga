@@ -5,14 +5,21 @@ import { LayoutDashboard, PackageCheck, History, Search, Filter, PackagePlus, Ch
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { serverApiFetch } from '@/lib/api-client';
+import { calculatePenalty } from '@/utils/penalty';
 
 export default async function SecurityDashboard() {
   // 1. UI memanggil API (via serverApiFetch helper)
   const packagesRes = await serverApiFetch('/api/packages?limit=50');
   const initialPackages = packagesRes.data || [];
-
   const statsRes = await serverApiFetch('/api/packages/stats');
   const stats = statsRes.data || { total: 0, pickedUp: 0, pending: 0, totalPenalty: 0 };
+  const totalPenalty = initialPackages.reduce((sum: number, pkg: { receivedAt?: string | Date; status?: string }) => {
+    if (pkg.status !== 'RECEIVED_BY_SECURITY' && pkg.status !== 'DELIVERED_TO_WARGA') {
+      return sum;
+    }
+
+    return sum + calculatePenalty(pkg.receivedAt || new Date()).amount;
+  }, 0);
 
   return (
     <AppShell active="dashboard">
@@ -67,7 +74,7 @@ export default async function SecurityDashboard() {
               <CreditCard size={48} className="text-primary" />
             </div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70 mb-1">Total Denda</p>
-            <p className="text-3xl font-black text-primary">Rp {(stats.totalPenalty || 0).toLocaleString('id-ID')}</p>
+            <p className="text-3xl font-black text-primary">Rp {totalPenalty.toLocaleString('id-ID')}</p>
           </Card>
         </div>
 

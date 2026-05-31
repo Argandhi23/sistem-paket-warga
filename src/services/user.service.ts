@@ -3,6 +3,7 @@ import { Role } from '@prisma/client';
 import { ApiError } from '@/lib/custom-error';
 import { UserRepository } from '@/repositories/user.repository';
 import { RumahRepository } from '@/repositories/rumah.repository';
+import { logActivity } from '@/lib/activity-logger';
 
 const FE_ROLE_MAP: Record<string, Role> = {
   WARGA: Role.WARGA,
@@ -85,6 +86,13 @@ export class UserService {
       unitNumber,
     });
 
+    await logActivity({
+      action: 'USER_CREATED',
+      entityType: 'User',
+      entityId: user.id,
+      details: { name, email, role },
+    });
+
     return sanitizeUser(user);
   }
 
@@ -148,6 +156,14 @@ export class UserService {
     }
 
     const updated = await UserRepository.update(id, nextData);
+
+    await logActivity({
+      action: 'USER_UPDATED',
+      entityType: 'User',
+      entityId: id,
+      details: { changes: nextData },
+    });
+
     return sanitizeUser(updated);
   }
 
@@ -163,6 +179,14 @@ export class UserService {
     }
 
     await UserRepository.delete(id);
+
+    await logActivity({
+      action: 'USER_DELETED',
+      entityType: 'User',
+      entityId: id,
+      details: { deleted: true },
+    });
+
     return { id };
   }
 
@@ -183,7 +207,16 @@ export class UserService {
     }
 
     if (payload.rumahId === null) {
-      return UserRepository.linkToRumah(userId, null);
+      const unlinked = await UserRepository.linkToRumah(userId, null, null);
+
+      await logActivity({
+        action: 'USER_UNLINKED_RUMAH',
+        entityType: 'User',
+        entityId: userId,
+        details: { rumahId: null },
+      });
+
+      return unlinked;
     }
 
     const rumahId = typeof payload.rumahId === 'string' ? payload.rumahId.trim() : '';
@@ -196,6 +229,15 @@ export class UserService {
       throw new ApiError(404, 'rumah tidak ditemukan');
     }
 
-    return UserRepository.linkToRumah(userId, rumahId);
+    const linked = await UserRepository.linkToRumah(userId, rumahId, `${rumah.blok}-${rumah.nomor}`);
+
+    await logActivity({
+      action: 'USER_LINKED_RUMAH',
+      entityType: 'User',
+      entityId: userId,
+      details: { rumahId },
+    });
+
+    return linked;
   }
 }

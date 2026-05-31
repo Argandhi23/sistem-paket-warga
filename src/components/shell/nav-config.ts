@@ -1,14 +1,15 @@
-import { Bell, CircleHelp, Grid2x2, Home, Package, PlusCircle, Users, BarChart3 } from 'lucide-react';
+import { Bell, CircleHelp, Grid2x2, Home, Package, Users, BarChart3, Activity } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 export type AppRole = 'ADMIN' | 'SECURITY' | 'WARGA';
 
-export type NavKey = 'dashboard' | 'warga' | 'rumah' | 'paket' | 'input-paket' | 'paket-saya' | 'riwayat' | 'laporan';
+export type NavKey = 'dashboard' | 'warga' | 'rumah' | 'paket' | 'input-paket' | 'paket-saya' | 'riwayat' | 'laporan' | 'logging';
 
 export type NavItem = {
   key: NavKey;
   href: string;
   label: string;
-  icon: any; // Using any for icon type to avoid strict Lucide icon typing issues in this context
+  icon: LucideIcon;
 };
 
 export type QuickAction = {
@@ -42,6 +43,7 @@ export const shellConfigs: Record<AppRole, ShellConfig> = {
       { key: 'rumah', href: '/admin/rumah', label: 'Manajemen Rumah', icon: Home },
       { key: 'paket', href: '/admin/paket', label: 'Daftar Paket', icon: Package },
       { key: 'laporan', href: '/admin/laporan', label: 'Analitik & Laporan', icon: BarChart3 },
+      { key: 'logging', href: '/admin/logging', label: 'Audit Trail', icon: Activity },
     ],
     quickAction: { href: '/admin/paket/tambah', label: '+ Input Paket Baru' },
     topIcons: baseIcons,

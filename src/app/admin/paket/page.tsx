@@ -9,6 +9,7 @@ import { Filter, PackageCheck, Search, ChevronRight, Box, Clock, CreditCard, His
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { calculatePenalty } from '@/utils/penalty';
 
 type PaketPageProps = {
   searchParams?: Promise<{ 
@@ -20,6 +21,11 @@ type PaketPageProps = {
     showFilter?: string;
     unit?: string;
   }>;
+};
+
+type PackageRow = {
+  receivedAt?: string | Date;
+  status?: string;
 };
 
 function normalizeStatus(status?: string) {
@@ -37,6 +43,8 @@ function statusLink(status: 'SEMUA' | 'RECEIVED_BY_SECURITY' | 'DELIVERED_TO_WAR
   if (status === 'SEMUA') return `/admin/paket?sort=${sort}`;
   return `/admin/paket?status=${status}&sort=${sort}`;
 }
+
+type StatusTab = 'SEMUA' | 'RECEIVED_BY_SECURITY' | 'DELIVERED_TO_WARGA';
 
 export default async function AdminPaketPage({ searchParams }: PaketPageProps) {
   const session = await getServerSession(authOptions);
@@ -61,12 +69,19 @@ export default async function AdminPaketPage({ searchParams }: PaketPageProps) {
 
   // 1. Fetch data paket via API
   const res = await serverApiFetch(`/api/packages?${query}`);
-  const daftarPaket = (res.data || []) as any[];
+  const daftarPaket = (res.data || []) as PackageRow[];
   const error = !res.success ? res.message : null;
 
   // 2. Fetch stats via API
   const statsRes = await serverApiFetch('/api/packages/stats');
   const stats = statsRes.data || { total: 0, pickedUp: 0, pending: 0, totalPenalty: 0 };
+  const totalPenalty = daftarPaket.reduce((sum: number, pkg: { receivedAt?: string | Date; status?: string }) => {
+    if (pkg.status !== 'RECEIVED_BY_SECURITY' && pkg.status !== 'DELIVERED_TO_WARGA') {
+      return sum;
+    }
+
+    return sum + calculatePenalty(pkg.receivedAt || new Date()).amount;
+  }, 0);
 
   return (
     <AppShell active="paket">
@@ -121,7 +136,7 @@ export default async function AdminPaketPage({ searchParams }: PaketPageProps) {
               <CreditCard size={48} className="text-primary" />
             </div>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70 mb-1">Total Denda</p>
-            <p className="text-3xl font-black text-primary">Rp {(stats.totalPenalty || 0).toLocaleString('id-ID')}</p>
+            <p className="text-3xl font-black text-primary">Rp {totalPenalty.toLocaleString('id-ID')}</p>
           </Card>
         </div>
 
@@ -163,7 +178,7 @@ export default async function AdminPaketPage({ searchParams }: PaketPageProps) {
                 ].map((s) => (
                   <Link 
                     key={s.key} 
-                    href={statusLink(s.key as any, activeSort)}
+                    href={statusLink(s.key as StatusTab, activeSort)}
                     className={`px-3 py-1.5 rounded-md transition-all ${activeStatus === s.key ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-main'}`}
                   >
                     {s.label}

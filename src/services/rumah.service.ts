@@ -1,5 +1,6 @@
 import { ApiError } from '@/lib/custom-error';
 import { RumahRepository } from '@/repositories/rumah.repository';
+import { logActivity } from '@/lib/activity-logger';
 
 function normalizeText(value: unknown) {
   if (typeof value !== 'string') return '';
@@ -25,7 +26,16 @@ export class RumahService {
       throw new ApiError(400, 'blok dan nomor rumah wajib diisi');
     }
 
-    return RumahRepository.create({ blok, nomor });
+    const rumah = await RumahRepository.create({ blok, nomor });
+
+    await logActivity({
+      action: 'RUMAH_CREATED',
+      entityType: 'Rumah',
+      entityId: rumah.id,
+      details: { blok, nomor },
+    });
+
+    return rumah;
   }
 
   static async update(payload: { id?: unknown; blok?: unknown; nomor?: unknown }) {
@@ -46,10 +56,19 @@ export class RumahService {
       throw new ApiError(400, 'blok atau nomor rumah wajib diisi untuk update');
     }
 
-    return RumahRepository.update(id, {
+    const updated = await RumahRepository.update(id, {
       blok: blok || undefined,
       nomor: nomor || undefined,
     });
+
+    await logActivity({
+      action: 'RUMAH_UPDATED',
+      entityType: 'Rumah',
+      entityId: id,
+      details: { changes: { blok, nomor } },
+    });
+
+    return updated;
   }
 
   static async delete(payload: { id?: unknown }) {
@@ -64,6 +83,14 @@ export class RumahService {
     }
 
     await RumahRepository.delete(id);
+
+    await logActivity({
+      action: 'RUMAH_DELETED',
+      entityType: 'Rumah',
+      entityId: id,
+      details: { deleted: true },
+    });
+
     return { id };
   }
 }
