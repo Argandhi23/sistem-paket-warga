@@ -73,10 +73,13 @@ export class UserRepository {
     return prisma.user.delete({ where: { id } });
   }
 
-  static async linkToRumah(userId: string, rumahId: string | null) {
+  static async linkToRumah(userId: string, rumahId: string | null, unitNumber?: string | null) {
     return prisma.user.update({
       where: { id: userId },
-      data: { rumahId },
+      data: {
+        rumahId,
+        unitNumber: unitNumber ?? null,
+      },
       include: {
         rumah: {
           select: {
