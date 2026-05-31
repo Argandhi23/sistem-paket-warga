@@ -56,6 +56,11 @@ export class UserRepository {
   static async findByEmail(email: string) {
     return prisma.user.findUnique({ where: { email } });
   }
+
+  static async countWarga() {
+    return prisma.user.count({ where: { role: Role.WARGA } });
+  }
+
   static async create(data: Prisma.UserCreateInput) {
     return prisma.user.create({ data });
   }

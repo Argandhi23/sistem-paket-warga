@@ -116,6 +116,12 @@ export class PackageRepository {
     });
   }
 
+  static async delete(id: string) {
+    return await prisma.package.delete({
+      where: { id },
+    });
+  }
+
   static async getDailyVolume(days: number = 7) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);

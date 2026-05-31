@@ -29,7 +29,7 @@ export const TrendChart = ({ data }: { data: { date: string; entry: number; pick
             axisLine={false} 
             tickLine={false} 
             tick={{ fill: '#94a3b8', fontSize: 10 }}
-            tickFormatter={(str) => {
+            tickFormatter={(str: string) => {
               const d = new Date(str);
               return d.getDate().toString();
             }}

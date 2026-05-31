@@ -31,6 +31,17 @@ export class RumahRepository {
     });
   }
 
+  static async getMappingStats() {
+    return {
+      total: await prisma.rumah.count(),
+      occupied: await prisma.rumah.count({
+        where: {
+          penghuni: { some: {} }
+        }
+      })
+    };
+  }
+
   static async findById(id: string) {
     return prisma.rumah.findUnique({ where: { id } });
   }

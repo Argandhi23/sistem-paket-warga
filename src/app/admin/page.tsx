@@ -4,10 +4,24 @@ import { Card } from '@/components/ui/Card';
 import { requireAdminSession } from '@/lib/require-admin-session';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { UserRepository } from '@/repositories/user.repository';
+import { PackageRepository } from '@/repositories/package.repository';
+import { RumahRepository } from '@/repositories/rumah.repository';
 
 export default async function AdminDashboard() {
   await requireAdminSession();
   const session = await getServerSession(authOptions);
+
+  // Fetch actual stats dynamically
+  const [wargaCount, packageStats, mappingStats] = await Promise.all([
+    UserRepository.countWarga(),
+    PackageRepository.getStats(),
+    RumahRepository.getMappingStats(),
+  ]);
+
+  const occupiedPercentage = mappingStats.total > 0
+    ? Math.round((mappingStats.occupied / mappingStats.total) * 100)
+    : 0;
 
   return (
     <AppShell active="dashboard">
@@ -60,7 +74,7 @@ export default async function AdminDashboard() {
                 </div>
                 <p className="text-xs font-bold text-text-muted uppercase tracking-widest">Data Warga</p>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <p className="text-4xl font-black text-text-main tracking-tight">128</p>
+                  <p className="text-4xl font-black text-text-main tracking-tight">{wargaCount}</p>
                   <TrendingUp className="h-4 w-4 text-success" strokeWidth={3} />
                 </div>
                 <p className="mt-1 text-xs font-medium text-text-muted/80">Akun aktif terdaftar</p>
@@ -76,7 +90,7 @@ export default async function AdminDashboard() {
                 </div>
                 <p className="text-xs font-bold text-text-muted uppercase tracking-widest">Paket Masuk</p>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <p className="text-4xl font-black text-text-main tracking-tight">24</p>
+                  <p className="text-4xl font-black text-text-main tracking-tight">{packageStats.pending}</p>
                 </div>
                 <p className="mt-1 text-xs font-medium text-text-muted/80">Belum diambil hari ini</p>
               </div>
@@ -91,7 +105,7 @@ export default async function AdminDashboard() {
                 </div>
                 <p className="text-xs font-bold text-text-muted uppercase tracking-widest">Unit Terpetakan</p>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <p className="text-4xl font-black text-text-main tracking-tight">87%</p>
+                  <p className="text-4xl font-black text-text-main tracking-tight">{occupiedPercentage}%</p>
                 </div>
                 <p className="mt-1 text-xs font-medium text-text-muted/80">Sinkron dengan data rumah</p>
               </div>
