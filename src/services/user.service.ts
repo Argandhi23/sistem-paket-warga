@@ -42,10 +42,15 @@ function sanitizeUser(user: {
 }
 
 export class UserService {
-  static async listForManagement(params: { role?: unknown; sort?: unknown }) {
+  static async listForManagement(params: { role?: unknown; sort?: unknown; q?: unknown }) {
     const role = normalizeRole(params.role);
     const sortOrder = normalizeSort(params.sort);
-    const users = await UserRepository.findForManagement({ role: role ?? undefined, sortOrder });
+    const searchQuery = typeof params.q === 'string' ? params.q.trim() : undefined;
+    const users = await UserRepository.findForManagement({ 
+      role: role ?? undefined, 
+      sortOrder,
+      searchQuery: searchQuery || undefined
+    });
     return users.map(sanitizeUser);
   }
 

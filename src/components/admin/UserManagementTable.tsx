@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail, Pencil, ShieldCheck, Trash2, User2, X } from 'lucide-react';
+import { Mail, Pencil, Search, ShieldCheck, Trash2, User2, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -40,6 +40,15 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [tableRows, setTableRows] = useState<UserItem[]>(rows);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const loadUsersFromApi = useCallback(async () => {
     const params = new URLSearchParams();
@@ -47,6 +56,9 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
       params.set('role', activeRole);
     }
     params.set('sort', activeSort);
+    if (debouncedSearchQuery.trim()) {
+      params.set('q', debouncedSearchQuery.trim());
+    }
 
     try {
       const response = await fetch(`/api/users?${params.toString()}`, { cache: 'no-store' });
@@ -61,7 +73,7 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
     }
 
     return false;
-  }, [activeRole, activeSort]);
+  }, [activeRole, activeSort, debouncedSearchQuery]);
 
   useEffect(() => {
     setTableRows(rows);
@@ -169,6 +181,16 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
 
   return (
     <>
+      <div className="p-4 bg-bg-card border-b border-border-light flex items-center justify-between gap-4">
+        <div className="relative w-full max-w-sm">
+          <Input
+            placeholder="Cari nama, email, atau unit..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            icon={<Search size={16} />}
+          />
+        </div>
+      </div>
       <div className="table-container">
         <table className="min-w-[980px] w-full text-left">
           <thead className="table-head">

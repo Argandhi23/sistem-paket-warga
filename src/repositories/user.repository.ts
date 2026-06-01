@@ -2,10 +2,27 @@ import prisma from '@/lib/prisma';
 import { Prisma, Role } from '@prisma/client';
 
 export class UserRepository {
-  static async findForManagement(params?: { role?: Role; sortOrder?: 'asc' | 'desc' }) {
-    const where: Prisma.UserWhereInput = params?.role
+  static async findForManagement(params?: { role?: Role; sortOrder?: 'asc' | 'desc'; searchQuery?: string }) {
+    const baseWhere: Prisma.UserWhereInput = params?.role
       ? { role: params.role }
       : { role: { in: [Role.WARGA, Role.SECURITY] } };
+
+    const where: Prisma.UserWhereInput = params?.searchQuery
+      ? {
+          AND: [
+            baseWhere,
+            {
+              OR: [
+                { name: { contains: params.searchQuery, mode: 'insensitive' } },
+                { email: { contains: params.searchQuery, mode: 'insensitive' } },
+                { unitNumber: { contains: params.searchQuery, mode: 'insensitive' } },
+                { rumah: { blok: { contains: params.searchQuery, mode: 'insensitive' } } },
+                { rumah: { nomor: { contains: params.searchQuery, mode: 'insensitive' } } },
+              ]
+            }
+          ]
+        }
+      : baseWhere;
 
     return prisma.user.findMany({
       where,

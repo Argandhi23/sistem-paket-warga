@@ -10,8 +10,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
     const sort = searchParams.get('sort');
+    const q = searchParams.get('q') || searchParams.get('search') || undefined;
 
-    const users = await UserService.listForManagement({ role, sort });
+    const users = await UserService.listForManagement({ role, sort, q });
     return NextResponse.json({ success: true, data: users });
   } catch (error) {
     return handleError(error);
