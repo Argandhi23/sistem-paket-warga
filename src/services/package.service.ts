@@ -3,6 +3,7 @@ import { RumahRepository } from '@/repositories/rumah.repository';
 import { ApiError } from '@/lib/custom-error';
 import { calculatePenalty as getPenaltyInfo, PENALTY_CONFIG } from '@/utils/penalty';
 import { logActivity } from '@/lib/activity-logger';
+import { Prisma } from '@prisma/client';
 
 export class PackageService {
   /**
@@ -32,7 +33,7 @@ export class PackageService {
   }
 
   static async getPackageStats(filters: { wargaId?: string; role: string }) {
-    const dbFilters: any = {};
+    const dbFilters: { wargaId?: string } = {};
     if (filters.role === "WARGA") {
       dbFilters.wargaId = filters.wargaId;
     }
@@ -57,9 +58,10 @@ export class PackageService {
 
     // SDPR-37/TestCases Skenario 1: Validasi unit ada di database Rumah
     const allRumah = await RumahRepository.findAll();
+    const normalizeUnit = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     const unitExists = allRumah.some(r => {
-      const formattedUnit = `${r.blok}-${r.nomor}`;
-      return formattedUnit.toUpperCase() === payload.unitNumber.toUpperCase();
+      const formattedUnit = `${r.blok}${r.nomor}`;
+      return normalizeUnit(formattedUnit) === normalizeUnit(payload.unitNumber);
     });
 
     if (!unitExists) {
@@ -87,12 +89,32 @@ export class PackageService {
     return newPackage;
   }
 
-  static async updatePackage(id: string, data: any) {
-    return await PackageRepository.update(id, data);
+  static async updatePackage(id: string, data: Prisma.PackageUncheckedUpdateInput, actorId?: string) {
+    const updatedPackage = await PackageRepository.update(id, data);
+
+    await logActivity({
+      action: 'PACKAGE_UPDATED',
+      entityType: 'Package',
+      entityId: id,
+      userId: actorId ?? null,
+      details: { changes: data },
+    });
+
+    return updatedPackage;
   }
 
-  static async deletePackage(id: string) {
-    return await PackageRepository.delete(id);
+  static async deletePackage(id: string, actorId?: string) {
+    const deletedPackage = await PackageRepository.delete(id);
+
+    await logActivity({
+      action: 'PACKAGE_DELETED',
+      entityType: 'Package',
+      entityId: id,
+      userId: actorId ?? null,
+      details: { deleted: true },
+    });
+
+    return deletedPackage;
   }
 
   static async processExpiredPackages() {

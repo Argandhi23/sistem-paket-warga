@@ -81,7 +81,7 @@ export async function PUT(request: Request) {
     if (!id) throw new ApiError(400, "ID paket wajib diisi.");
 
     // Sesuai Audit: Gunakan Service layer, jangan bypass ke Repository
-    const updatedPackage = await PackageService.updatePackage(id, data);
+    const updatedPackage = await PackageService.updatePackage(id, data, session.user.id);
     return NextResponse.json({ success: true, data: updatedPackage });
   } catch (error) {
     return handleError(error);
@@ -101,7 +101,7 @@ export async function DELETE(request: Request) {
     if (!id) throw new ApiError(400, "ID paket wajib diisi.");
 
     // Sesuai Audit: Gunakan Service layer, jangan bypass ke Repository
-    await PackageService.deletePackage(id);
+    await PackageService.deletePackage(id, session.user.id);
     return NextResponse.json({ success: true, message: "Log paket berhasil dihapus." });
   } catch (error) {
     return handleError(error);

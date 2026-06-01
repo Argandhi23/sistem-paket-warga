@@ -10,19 +10,19 @@ export async function logActivity({
   action: string;
   entityType: string;
   entityId: string;
-  details?: any;
+  details?: string | Record<string, unknown> | null;
   userId?: string | null;
 }) {
   try {
-    const serializedDetails = typeof details === 'object' && details !== null 
-      ? JSON.stringify(details) 
-      : details;
+    const serializedDetails =
+      details && typeof details === 'object' ? JSON.stringify(details) : details;
+
     const log = await prisma.activityLog.create({
       data: {
         action,
         entityType,
         entityId,
-        details: serializedDetails,
+        details: serializedDetails ?? null,
         userId,
       },
     });

@@ -79,7 +79,17 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
-        session.user.unitNumber = token.unitNumber;
+        if (token.unitNumber) {
+          session.user.unitNumber = token.unitNumber;
+        } else if (token.id) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: String(token.id) },
+            select: { unitNumber: true },
+          });
+          session.user.unitNumber = dbUser?.unitNumber ?? null;
+        } else {
+          session.user.unitNumber = null;
+        }
       }
       return session;
     }

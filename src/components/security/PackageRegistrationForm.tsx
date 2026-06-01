@@ -97,7 +97,7 @@ export default function PackageRegistrationForm() {
       if (response.ok) {
         setMessage('Paket berhasil didaftarkan!');
         setTimeout(() => {
-          router.push('/security');
+          router.push(session?.user?.role === 'ADMIN' ? '/admin/paket' : '/security/paket');
           router.refresh();
         }, 1500);
       } else {
