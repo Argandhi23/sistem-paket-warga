@@ -25,7 +25,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBanner } from '@/components/ui/ErrorState';
 import { calculatePenalty, formatRupiah } from '@/utils/penalty';
 
-type PackageItem = {
+export type PackageItem = {
   id: string;
   trackingNumber: string | null;
   courierName: string;

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import AppShell from '@/components/shell/AppShell';
-import PackageManagementTable from '@/components/admin/PackageManagementTable';
+import PackageManagementTable, { PackageItem } from '@/components/admin/PackageManagementTable';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { serverApiFetch } from '@/lib/api-client';
@@ -23,10 +23,7 @@ type PaketPageProps = {
   }>;
 };
 
-type PackageRow = {
-  receivedAt?: string | Date;
-  status?: string;
-};
+
 
 function normalizeStatus(status?: string) {
   if (status === 'RECEIVED_BY_SECURITY') return 'RECEIVED_BY_SECURITY';
@@ -69,7 +66,7 @@ export default async function AdminPaketPage({ searchParams }: PaketPageProps) {
 
   // 1. Fetch data paket via API
   const res = await serverApiFetch(`/api/packages?${query}`);
-  const daftarPaket = (res.data || []) as PackageRow[];
+  const daftarPaket = (res.data || []) as PackageItem[];
   const error = !res.success ? res.message : null;
 
   // 2. Fetch stats via API
