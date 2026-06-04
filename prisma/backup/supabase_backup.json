@@ -1,0 +1,154 @@
+{
+  "Rumah": [
+    {
+      "id": "07970ec7-caaf-47f2-ab74-3c384d1f1dea",
+      "blok": "A",
+      "nomor": "1",
+      "createdAt": "2026-06-03T03:23:04.638Z",
+      "updatedAt": "2026-06-03T03:23:04.638Z"
+    },
+    {
+      "id": "cf16f25a-338d-48ea-bf37-fe8f0739cff6",
+      "blok": "B",
+      "nomor": "2",
+      "createdAt": "2026-06-03T03:23:04.681Z",
+      "updatedAt": "2026-06-03T03:23:04.681Z"
+    },
+    {
+      "id": "0a997aad-fe68-4bee-ae5d-51d22af75cae",
+      "blok": "C",
+      "nomor": "3",
+      "createdAt": "2026-06-03T03:23:04.715Z",
+      "updatedAt": "2026-06-03T03:23:04.715Z"
+    }
+  ],
+  "User": [
+    {
+      "id": "c22d9cf8-20e1-45fe-b537-2d73db3fedea",
+      "name": "Administrator",
+      "email": "admin@sistem.com",
+      "emailVerified": null,
+      "image": null,
+      "password": "$2b$10$FgRzzNhwLzBtOO9jhf05hOUdTFLNRoczAkgVwpAvSJK5Xby5ZRyXu",
+      "role": "ADMIN",
+      "unitNumber": null,
+      "createdAt": "2026-06-03T03:23:04.812Z",
+      "updatedAt": "2026-06-03T03:23:04.812Z",
+      "rumahId": null
+    },
+    {
+      "id": "aba609d7-fc25-41f2-b8d3-23cef7469390",
+      "name": "Pak Satpam",
+      "email": "security@sistem.com",
+      "emailVerified": null,
+      "image": null,
+      "password": "$2b$10$FgRzzNhwLzBtOO9jhf05hOUdTFLNRoczAkgVwpAvSJK5Xby5ZRyXu",
+      "role": "SECURITY",
+      "unitNumber": null,
+      "createdAt": "2026-06-03T03:23:04.854Z",
+      "updatedAt": "2026-06-03T03:23:04.854Z",
+      "rumahId": null
+    },
+    {
+      "id": "42507c01-c11e-4da1-af9c-a2103df8da96",
+      "name": "Warga Blok A1",
+      "email": "warga.a@sistem.com",
+      "emailVerified": null,
+      "image": null,
+      "password": "$2b$10$FgRzzNhwLzBtOO9jhf05hOUdTFLNRoczAkgVwpAvSJK5Xby5ZRyXu",
+      "role": "WARGA",
+      "unitNumber": "A-1",
+      "createdAt": "2026-06-03T03:23:04.891Z",
+      "updatedAt": "2026-06-03T03:23:04.891Z",
+      "rumahId": "07970ec7-caaf-47f2-ab74-3c384d1f1dea"
+    },
+    {
+      "id": "0d40966c-d43f-4d04-8cdd-7b083f6e928b",
+      "name": "Warga Blok B2",
+      "email": "warga.b@sistem.com",
+      "emailVerified": null,
+      "image": null,
+      "password": "$2b$10$FgRzzNhwLzBtOO9jhf05hOUdTFLNRoczAkgVwpAvSJK5Xby5ZRyXu",
+      "role": "WARGA",
+      "unitNumber": "B-2",
+      "createdAt": "2026-06-03T03:23:04.925Z",
+      "updatedAt": "2026-06-03T03:23:04.925Z",
+      "rumahId": "cf16f25a-338d-48ea-bf37-fe8f0739cff6"
+    }
+  ],
+  "Account": [],
+  "Session": [],
+  "Package": [
+    {
+      "id": "9464fdad-c07d-4aa6-beb0-98245a7f15ca",
+      "trackingNumber": "SPW-JNE-1001",
+      "courierName": "JNE Express",
+      "recipientName": "Warga Blok A1",
+      "unitNumber": "A-1",
+      "status": "RECEIVED_BY_SECURITY",
+      "receivedAt": "2026-06-03T01:23:04.957Z",
+      "pickedUpAt": null,
+      "wargaId": "42507c01-c11e-4da1-af9c-a2103df8da96",
+      "securityId": "aba609d7-fc25-41f2-b8d3-23cef7469390",
+      "penaltyAmount": 0,
+      "penaltyPaid": false,
+      "pickedUpBy": null
+    },
+    {
+      "id": "78bf4993-247e-4791-8799-017c18205fae",
+      "trackingNumber": "SPW-JNT-2002",
+      "courierName": "J&T Express",
+      "recipientName": "Warga Blok A1",
+      "unitNumber": "A-1",
+      "status": "DELIVERED_TO_WARGA",
+      "receivedAt": "2026-05-29T03:23:04.999Z",
+      "pickedUpAt": "2026-05-30T03:23:04.999Z",
+      "wargaId": "42507c01-c11e-4da1-af9c-a2103df8da96",
+      "securityId": "aba609d7-fc25-41f2-b8d3-23cef7469390",
+      "penaltyAmount": 0,
+      "penaltyPaid": false,
+      "pickedUpBy": "Warga Blok A1"
+    },
+    {
+      "id": "7b45a857-2aa2-4378-830e-689cc26b8360",
+      "trackingNumber": "SPW-SIC-3003",
+      "courierName": "SiCepat",
+      "recipientName": "Warga Blok B2",
+      "unitNumber": "B-2",
+      "status": "EXPIRED",
+      "receivedAt": "2026-05-24T03:23:05.037Z",
+      "pickedUpAt": null,
+      "wargaId": "0d40966c-d43f-4d04-8cdd-7b083f6e928b",
+      "securityId": "aba609d7-fc25-41f2-b8d3-23cef7469390",
+      "penaltyAmount": 0,
+      "penaltyPaid": false,
+      "pickedUpBy": null
+    },
+    {
+      "id": "038b32ca-87d9-46a3-9475-c26f46b6b94f",
+      "trackingNumber": "TEST-RES-999",
+      "courierName": "JNE",
+      "recipientName": "Warga Blok A1",
+      "unitNumber": "A-1",
+      "status": "RECEIVED_BY_SECURITY",
+      "receivedAt": "2026-06-03T03:25:04.224Z",
+      "pickedUpAt": null,
+      "wargaId": "42507c01-c11e-4da1-af9c-a2103df8da96",
+      "securityId": "aba609d7-fc25-41f2-b8d3-23cef7469390",
+      "penaltyAmount": 0,
+      "penaltyPaid": false,
+      "pickedUpBy": null
+    }
+  ],
+  "ActivityLog": [
+    {
+      "id": "8bd12c22-a4d3-4a09-9be1-3ed133470f3f",
+      "action": "PACKAGE_REGISTRATION",
+      "entityType": "Package",
+      "entityId": "038b32ca-87d9-46a3-9475-c26f46b6b94f",
+      "details": "{\"courier\":\"JNE\",\"recipient\":\"Warga Blok A1\"}",
+      "userId": "aba609d7-fc25-41f2-b8d3-23cef7469390",
+      "createdAt": "2026-06-03T03:25:04.260Z"
+    }
+  ]
+}
