@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PackageService } from '../../services/package.service';
+import { buildConnectionString } from '../prisma';
 
 describe('Unit Test: Algoritma calculatePenalty di PackageService', () => {
   beforeEach(() => {
@@ -40,5 +41,14 @@ describe('Unit Test: Algoritma calculatePenalty di PackageService', () => {
     
     const penalty = PackageService.calculatePenalty(receivedAt);
     expect(penalty).toBe(14000); // 7 * 2000
+  });
+
+  it('✅ Normalisasi DATABASE_URL dengan ?pgbouncer=true&connection_limit=1 tidak merusak nama database', () => {
+    const raw =
+      'postgresql://postgres.ref:secret@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1';
+    const result = buildConnectionString(raw);
+    expect(result).toBe(
+      'postgresql://postgres.ref:secret@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres'
+    );
   });
 });

@@ -5,28 +5,43 @@ import { PrismaClient } from "@prisma/client";
 import { memoryPrisma } from "./memory-db";
 
 /**
- * Membangun connection string yang optimal untuk Vercel Serverless (IPv4) + Supabase Free Tier.
+ * Membangun dan menormalisasi connection string PostgreSQL menggunakan URL parser standar.
+ * - Mencegah bug string replacement pada `?pgbouncer=true&connection_limit=1` yang sebelumnya
+ *   mengubah `/postgres?pgbouncer=true&connection_limit=1` menjadi `/postgres&connection_limit=1`.
  * - Prioritaskan DATABASE_URL (Supavisor Pooler *.pooler.supabase.com yang mendukung IPv4 & IPv6)
- *   karena DIRECT_URL (db.*.supabase.co) di Supabase Free Tier hanya mendukung IPv6 dan akan
- *   gagal (ENOTFOUND) di Vercel Serverless Functions.
+ *   agar berjalan lancar di Vercel Serverless Functions.
  */
-function buildConnectionString(): string {
-  let connectionString = process.env.DATABASE_URL || process.env.DIRECT_URL || "";
+export function buildConnectionString(rawUrl?: string): string {
+  const raw = (rawUrl ?? process.env.DATABASE_URL ?? process.env.DIRECT_URL ?? "").trim();
+  if (!raw) return "";
 
-  if (connectionString.includes("@localhost:")) {
-    connectionString = connectionString.replace("@localhost:", "@127.0.0.1:");
+  try {
+    const parsed = new URL(raw);
+
+    // Ganti localhost ke 127.0.0.1 untuk menghindari isu resolusi IPv6 lokal
+    if (parsed.hostname === "localhost") {
+      parsed.hostname = "127.0.0.1";
+    }
+
+    // Perbaiki jika pathname tidak sengaja mengandung '&' akibat URL tanpa '?'
+    if (parsed.pathname.includes("&")) {
+      parsed.pathname = parsed.pathname.split("&")[0];
+    }
+
+    // Gunakan Supavisor Session Mode (:5432 pada host pooler) agar kompatibel penuh dengan PrismaPg
+    if (parsed.hostname.includes(".pooler.supabase.com") && parsed.port === "6543") {
+      parsed.port = "5432";
+    }
+
+    // Bersihkan query parameter khusus Prisma CLI yang tidak digunakan oleh node-postgres (pg)
+    parsed.searchParams.delete("pgbouncer");
+    parsed.searchParams.delete("connection_limit");
+    parsed.searchParams.delete("pool_timeout");
+
+    return parsed.toString();
+  } catch {
+    return raw;
   }
-
-  // Gunakan Supavisor Session Mode (:5432 pada host pooler) agar kompatibel penuh dengan PrismaPg
-  if (connectionString.includes(".pooler.supabase.com:6543")) {
-    connectionString = connectionString.replace(":6543", ":5432");
-  }
-
-  connectionString = connectionString
-    .replace("?pgbouncer=true", "")
-    .replace("&pgbouncer=true", "");
-
-  return connectionString;
 }
 
 function isDatabaseUnreachableError(error: unknown): boolean {
@@ -41,7 +56,10 @@ function isDatabaseUnreachableError(error: unknown): boolean {
     msg.includes("tenant/user") ||
     msg.includes("tenant or user not found") ||
     msg.includes("can't reach database server") ||
-    msg.includes("connection terminated")
+    msg.includes("connection terminated") ||
+    msg.includes("does not exist on the database server") ||
+    msg.includes("maxclientsinsessionmode") ||
+    msg.includes("remaining connection slots")
   );
 }
 
