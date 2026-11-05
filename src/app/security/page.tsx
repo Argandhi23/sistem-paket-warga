@@ -1,18 +1,18 @@
 import AppShell from '@/components/shell/AppShell';
 import PackageManifestTable from '@/components/admin/PackageManifestTable';
 import { Card } from '@/components/ui/Card';
-import { LayoutDashboard, PackageCheck, History, Search, Filter, PackagePlus, ChevronRight, CheckCircle2, Clock, CreditCard, Box } from 'lucide-react';
+import { PackageCheck, PackagePlus, ChevronRight, CheckCircle2, Clock, CreditCard, Box } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { serverApiFetch } from '@/lib/api-client';
+import { PackageService } from '@/services/package.service';
 import { calculatePenalty } from '@/utils/penalty';
 
 export default async function SecurityDashboard() {
-  // 1. UI memanggil API (via serverApiFetch helper)
-  const packagesRes = await serverApiFetch('/api/packages?limit=50');
-  const initialPackages = packagesRes.data || [];
-  const statsRes = await serverApiFetch('/api/packages/stats');
-  const stats = statsRes.data || { total: 0, pickedUp: 0, pending: 0, totalPenalty: 0 };
+  const [initialPackages, stats] = await Promise.all([
+    PackageService.listForAdmin({}),
+    PackageService.getPackageStats({ role: 'SECURITY' }),
+  ]);
+
   const totalPenalty = initialPackages.reduce((sum: number, pkg: { receivedAt?: string | Date; status?: string }) => {
     if (pkg.status !== 'RECEIVED_BY_SECURITY' && pkg.status !== 'DELIVERED_TO_WARGA') {
       return sum;
@@ -36,10 +36,10 @@ export default async function SecurityDashboard() {
             <p className="text-sm text-text-muted mt-1">Pantau paket masuk dan status pengambilan secara real-time dari pos satpam.</p>
           </div>
           <Link href="/security/paket/tambah">
-             <Button className="rounded-xl px-6 py-3 shadow-lg shadow-primary/20 gap-2">
-               <PackagePlus size={18} />
-               + Registrasi Paket
-             </Button>
+            <Button className="rounded-xl px-6 py-3 shadow-lg shadow-primary/20 gap-2">
+              <PackagePlus size={18} />
+              + Registrasi Paket
+            </Button>
           </Link>
         </div>
 
@@ -80,53 +80,38 @@ export default async function SecurityDashboard() {
 
         {/* Real-time Section */}
         <Card className="border-border-light shadow-card overflow-hidden">
-          <div className="p-4 border-b border-border-light bg-bg-muted/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-             <div className="relative flex-1 group max-w-md">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
-               <input 
-                  type="text" 
-                  placeholder="Cari berdasarkan No. Resi, Rumah, atau Kurir..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white rounded-lg border border-border-light outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all text-sm font-medium"
-               />
-             </div>
-             <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-2 rounded-lg border-border-main text-text-muted">
-                  <Filter size={16} /> Filter
-                </Button>
-             </div>
-          </div>
           <PackageManifestTable initialData={initialPackages} />
         </Card>
 
         {/* Quick Tips */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-           <div className="p-4 rounded-xl border border-border-light bg-white/50 flex items-start gap-3">
-              <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                 <PackageCheck size={16} className="text-primary" />
-              </div>
-              <div>
-                 <p className="text-xs font-bold text-text-main uppercase tracking-widest mb-1">Cek Identitas</p>
-                 <p className="text-[11px] text-text-muted leading-relaxed">Selalu verifikasi kartu identitas warga sebelum menyerahkan paket.</p>
-              </div>
-           </div>
-           <div className="p-4 rounded-xl border border-border-light bg-white/50 flex items-start gap-3">
-              <div className="size-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
-                 <Clock size={16} className="text-secondary-dark" />
-              </div>
-              <div>
-                 <p className="text-xs font-bold text-text-main uppercase tracking-widest mb-1">Audit Denda</p>
-                 <p className="text-[11px] text-text-muted leading-relaxed">Sistem otomatis menghitung denda Rp 2.000/hari mulai hari ke-4.</p>
-              </div>
-           </div>
-           <div className="p-4 rounded-xl border border-border-light bg-white/50 flex items-start gap-3">
-              <div className="size-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                 <PackagePlus size={16} className="text-emerald-700" />
-              </div>
-              <div>
-                 <p className="text-xs font-bold text-text-main uppercase tracking-widest mb-1">Input Akurat</p>
-                 <p className="text-[11px] text-text-muted leading-relaxed">Pastikan nomor unit rumah sesuai dengan label pada paket fisik.</p>
-              </div>
-           </div>
+          <div className="p-4 rounded-xl border border-border-light bg-white/50 flex items-start gap-3">
+            <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <PackageCheck size={16} className="text-primary" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-text-main uppercase tracking-widest mb-1">Cek Identitas</p>
+              <p className="text-[11px] text-text-muted leading-relaxed">Selalu verifikasi kartu identitas warga sebelum menyerahkan paket.</p>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl border border-border-light bg-white/50 flex items-start gap-3">
+            <div className="size-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
+              <Clock size={16} className="text-secondary-dark" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-text-main uppercase tracking-widest mb-1">Audit Denda</p>
+              <p className="text-[11px] text-text-muted leading-relaxed">Sistem otomatis menghitung denda Rp 2.000/hari mulai hari ke-4.</p>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl border border-border-light bg-white/50 flex items-start gap-3">
+            <div className="size-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+              <PackagePlus size={16} className="text-emerald-700" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-text-main uppercase tracking-widest mb-1">Input Akurat</p>
+              <p className="text-[11px] text-text-muted leading-relaxed">Pastikan nomor unit rumah sesuai dengan label pada paket fisik.</p>
+            </div>
+          </div>
         </div>
       </div>
     </AppShell>

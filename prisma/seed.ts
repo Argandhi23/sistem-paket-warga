@@ -28,7 +28,7 @@ async function main() {
   const rumahB2 = await prisma.rumah.create({
     data: { blok: 'B', nomor: '2' }
   });
-  const rumahC3 = await prisma.rumah.create({
+  await prisma.rumah.create({
     data: { blok: 'C', nomor: '3' }
   });
 
@@ -38,7 +38,7 @@ async function main() {
   const passwordHash = await bcrypt.hash('password123', 10);
 
   // Admin User
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: 'Administrator',
       email: 'admin@sistem.com',

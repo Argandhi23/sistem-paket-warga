@@ -1,25 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth"; // Need to make sure auth options is here or use requireSession
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SECURITY")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SECURITY')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get today's start and end date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Aggregate statistics
     const [totalToday, statusCounts, recentPackages] = await Promise.all([
-      // Total received today
       prisma.package.count({
         where: {
           receivedAt: {
@@ -28,8 +25,6 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-
-      // Group by status for today's packages
       prisma.package.groupBy({
         by: ['status'],
         where: {
@@ -42,8 +37,6 @@ export async function GET(req: NextRequest) {
           id: true,
         },
       }),
-
-      // Get 5 most recent packages today
       prisma.package.findMany({
         where: {
           receivedAt: {
@@ -57,13 +50,12 @@ export async function GET(req: NextRequest) {
         },
         include: {
           warga: {
-            select: { name: true, unitNumber: true }
-          }
-        }
-      })
+            select: { name: true, unitNumber: true },
+          },
+        },
+      }),
     ]);
 
-    // Format the status counts into an easier object
     const statusData = {
       RECEIVED_BY_SECURITY: 0,
       DELIVERED_TO_WARGA: 0,
@@ -79,16 +71,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        date: today.toISOString().split("T")[0],
+        date: today.toISOString().split('T')[0],
         total: totalToday,
         byStatus: statusData,
-        recent: recentPackages
+        recent: recentPackages,
       },
     });
   } catch (error) {
-    console.error("Error fetching package statistics:", error);
+    console.error('Error fetching package statistics:', error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: 'Internal Server Error' },
       { status: 500 }
     );
   }

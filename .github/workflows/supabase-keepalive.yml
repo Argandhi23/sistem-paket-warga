@@ -1,0 +1,39 @@
+name: Supabase Keep-Alive (Anti-Pause)
+
+on:
+  schedule:
+    # Jalan otomatis setiap 2 hari sekali pukul 04:00 UTC (11:00 WIB)
+    # Mencegah Supabase Free Tier ter-pause akibat batas inaktivitas 7 hari
+    - cron: '0 4 */2 * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API Gateway
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            echo "Pinging Supabase REST Gateway..."
+            curl -sS -f "$SUPABASE_URL/rest/v1/Rumah?select=id&limit=1" \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+            echo "Supabase REST ping successful!"
+          else
+            echo "NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY secrets belum diset di GitHub, melewati direct REST ping."
+          fi
+
+      - name: Ping Vercel App Keep-Alive Endpoint
+        env:
+          APP_URL: ${{ secrets.NEXTAUTH_URL }}
+        run: |
+          if [ -n "$APP_URL" ]; then
+            echo "Pinging $APP_URL/api/keep-alive ..."
+            curl -sS -f "$APP_URL/api/keep-alive"
+            echo "Vercel keep-alive ping successful!"
+          else
+            echo "NEXTAUTH_URL secret belum diset di GitHub, melewati ping aplikasi."
+          fi

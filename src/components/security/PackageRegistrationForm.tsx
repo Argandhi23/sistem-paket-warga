@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { 
   Barcode, 
-  ChevronDown, 
   Calendar, 
   Home, 
   Search, 
@@ -15,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
-import { Card, CardHeader } from '@/components/ui/Card';
 import { Input, Select } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 
@@ -103,7 +101,7 @@ export default function PackageRegistrationForm() {
       } else {
         setMessage(result.error || 'Gagal mendaftarkan paket.');
       }
-    } catch (error) {
+    } catch {
       setMessage('Terjadi kesalahan koneksi.');
     } finally {
       setIsSubmitting(false);

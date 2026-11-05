@@ -4,7 +4,6 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { Adapter } from "next-auth/adapters";
 
-// ✅ FIX: Gunakan relative path (./) alih-alih alias (@/lib/)
 import prisma from "./prisma";
 import { isRateLimited, recordFailedAttempt, clearRateLimit } from "./rate-limit";
 
@@ -12,17 +11,19 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
+  },
+  pages: {
+    signIn: "/login",
   },
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "email@contoh.com" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
-      // Tambahkan 'req' sebagai parameter kedua untuk mendapatkan informasi IP
       async authorize(credentials, req) {
-        // Ambil IP address pengguna (Biasanya disediakan oleh header Next.js / Vercel)
         const forwardedFor = req?.headers?.["x-forwarded-for"];
         const ip = typeof forwardedFor === "string" ? forwardedFor.split(",")[0] : "unknown_ip";
 
@@ -35,13 +36,14 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email dan password wajib diisi");
         }
 
+        const normalizedEmail = credentials.email.trim().toLowerCase();
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: normalizedEmail },
         });
 
         // 🛡️ Anti-Enumeration + Record Kegagalan
         if (!user || !user.password) {
-          recordFailedAttempt(ip); // Catat IP gagal
+          recordFailedAttempt(ip);
           throw new Error("Kredensial tidak valid");
         }
 
@@ -49,11 +51,10 @@ export const authOptions: NextAuthOptions = {
 
         // 🛡️ Anti-Enumeration + Record Kegagalan
         if (!isPasswordValid) {
-          recordFailedAttempt(ip); // Catat IP gagal
+          recordFailedAttempt(ip);
           throw new Error("Kredensial tidak valid");
         }
 
-        // 🛡️ Jika berhasil login, bersihkan catatan kegagalannya
         clearRateLimit(ip);
 
         return {
@@ -61,17 +62,23 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          unitNumber: user.unitNumber,
+          unitNumber: user.unitNumber ?? null,
         };
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.unitNumber = user.unitNumber;
+        token.unitNumber = user.unitNumber ?? null;
+      } else if (token.unitNumber === undefined && token.role === "WARGA" && token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: String(token.id) },
+          select: { unitNumber: true },
+        });
+        token.unitNumber = dbUser?.unitNumber ?? null;
       }
       return token;
     },
@@ -79,20 +86,10 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
-        if (token.unitNumber) {
-          session.user.unitNumber = token.unitNumber;
-        } else if (token.id) {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: String(token.id) },
-            select: { unitNumber: true },
-          });
-          session.user.unitNumber = dbUser?.unitNumber ?? null;
-        } else {
-          session.user.unitNumber = null;
-        }
+        session.user.unitNumber = token.unitNumber ?? null;
       }
       return session;
-    }
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

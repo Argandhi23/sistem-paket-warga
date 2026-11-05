@@ -14,8 +14,8 @@ export type PackageDetail = {
   courierName: string;
   recipientName: string;
   receivedAt: string | Date;
-  storedAt: string; // Pos Security - Blok A
-  receivedBy: string; // Penerima awal (security/admin)
+  storedAt: string;
+  receivedBy: string;
   pickedUpAt?: string | Date | null;
   pickedUpBy?: string | null;
   penaltyAmount?: number;
@@ -33,6 +33,7 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
   const router = useRouter();
   const [handoverName, setHandoverName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   if (!open) return null;
 
@@ -43,11 +44,12 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
 
   const handleHandover = async () => {
     if (!handoverName.trim()) {
-      alert('Masukkan nama pengambil paket.');
+      setErrorMessage('Masukkan nama pengambil paket terlebih dahulu.');
       return;
     }
 
     setIsSubmitting(true);
+    setErrorMessage('');
     try {
       const response = await fetch('/api/packages/handover', {
         method: 'PATCH',
@@ -56,7 +58,7 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
           id: paket.id,
           pickedUpBy: handoverName.trim(),
           penaltyAmount: penaltyInfo.amount,
-          penaltyPaid: hasPenalty, // Jika ada denda, tandai lunas saat diserahkan
+          penaltyPaid: hasPenalty,
         }),
       });
 
@@ -65,10 +67,10 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
         onClose();
       } else {
         const errorResult = await response.json();
-        alert(errorResult.error || 'Gagal memproses penyerahan paket.');
+        setErrorMessage(errorResult.error || 'Gagal memproses penyerahan paket.');
       }
-    } catch (err) {
-      alert('Kesalahan koneksi.');
+    } catch {
+      setErrorMessage('Kesalahan koneksi saat memproses penyerahan paket.');
     } finally {
       setIsSubmitting(false);
     }
@@ -138,20 +140,20 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
 
           {isPickedUp && (
             <div className="pt-4 border-t border-border-light border-dashed space-y-4">
-               <div className="flex items-center gap-2 text-success font-bold text-xs uppercase tracking-wider">
-                  <CheckCircle2 size={14} />
-                  Informasi Pengambilan
+              <div className="flex items-center gap-2 text-success font-bold text-xs uppercase tracking-wider">
+                <CheckCircle2 size={14} />
+                Informasi Pengambilan
+              </div>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <DetailRow icon={<Calendar size={16} />} label="Tanggal Diambil" value={dateTimeID(paket.pickedUpAt!)} />
+                <DetailRow icon={<User size={16} />} label="Diambil oleh" value={paket.pickedUpBy || '-'} bold />
+              </div>
+              {paket.penaltyAmount ? (
+                <div className="flex justify-between items-center p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest">Status Denda</span>
+                  <span className="font-black text-emerald-700">LUNAS ({formatRupiah(paket.penaltyAmount)})</span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                  <DetailRow icon={<Calendar size={16} />} label="Tanggal Diambil" value={dateTimeID(paket.pickedUpAt!)} />
-                  <DetailRow icon={<User size={16} />} label="Diambil oleh" value={paket.pickedUpBy || '-'} bold />
-                </div>
-                {paket.penaltyAmount ? (
-                   <div className="flex justify-between items-center p-3 rounded-lg bg-emerald-50 border border-emerald-100">
-                      <span className="text-xs font-bold text-emerald-800 uppercase tracking-widest">Status Denda</span>
-                      <span className="font-black text-emerald-700">LUNAS ({formatRupiah(paket.penaltyAmount)})</span>
-                   </div>
-                ) : null}
+              ) : null}
             </div>
           )}
 
@@ -169,14 +171,20 @@ export const PackageDetailModal: React.FC<PackageDetailModalProps> = ({ open, on
           )}
 
           {showHandoverForm && (
-            <div className="pt-4 border-t border-border-light">
-               <Input 
-                  label="Nama Pengambil Paket"
-                  placeholder="Masukkan nama warga atau keluarga..."
-                  value={handoverName}
-                  onChange={(e) => setHandoverName(e.target.value)}
-                  icon={<User size={16} />}
-               />
+            <div className="pt-4 border-t border-border-light space-y-2">
+              <Input 
+                label="Nama Pengambil Paket"
+                placeholder="Masukkan nama warga atau keluarga..."
+                value={handoverName}
+                onChange={(e) => {
+                  setHandoverName(e.target.value);
+                  if (errorMessage) setErrorMessage('');
+                }}
+                icon={<User size={16} />}
+              />
+              {errorMessage && (
+                <p className="text-xs font-semibold text-danger">{errorMessage}</p>
+              )}
             </div>
           )}
         </div>

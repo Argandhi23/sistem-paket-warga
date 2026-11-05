@@ -2,10 +2,9 @@
 
 import { SyntheticEvent, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
-import { Package, Truck, ShieldCheck, Clock, HelpCircle, Globe, LockKeyhole, Eye, EyeOff, User, ArrowRight } from "lucide-react";
+import { Package, ShieldCheck, Clock, HelpCircle, Globe, LockKeyhole, Eye, EyeOff, User, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import Image from "next/image";
 
 type FieldName = "email" | "password";
 
@@ -14,7 +13,12 @@ type FieldState = {
   password: string;
 };
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEMO_ACCOUNTS = [
+  { label: "Admin", email: "admin@sistem.com", password: "password123", badge: "ADMIN" },
+  { label: "Satpam", email: "security@sistem.com", password: "password123", badge: "SECURITY" },
+  { label: "Warga A-1", email: "warga.a@sistem.com", password: "password123", badge: "WARGA" },
+  { label: "Warga B-2", email: "warga.b@sistem.com", password: "password123", badge: "WARGA" },
+];
 
 function getFieldErrors(fields: FieldState) {
   const errors: Partial<Record<FieldName, string>> = {};
@@ -67,6 +71,12 @@ export default function LoginPage() {
     return errors[field];
   };
 
+  const applyDemoAccount = (email: string, password: string) => {
+    setFields({ email, password });
+    setTouched({ email: true, password: true });
+    setStatusMessage("");
+  };
+
   const onSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitted(true);
@@ -115,7 +125,6 @@ export default function LoginPage() {
         {/* Left Panel */}
         <div className="bg-primary flex flex-col justify-center items-center relative h-full">
           <div className="w-full max-w-lg px-8 flex flex-col items-center">
-
             <h2 className="text-white font-bold text-2xl text-center mt-2">
               Efisien. Terpercaya. Tepat Waktu.
             </h2>
@@ -138,7 +147,7 @@ export default function LoginPage() {
         {/* Right Panel */}
         <div className="bg-white flex flex-col justify-center px-12 py-10">
           <div className="max-w-md w-full mx-auto">
-            <div className="flex items-center gap-3 mb-10">
+            <div className="flex items-center gap-3 mb-8">
               <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
                 <Package className="size-5 text-primary" strokeWidth={2} />
               </div>
@@ -147,12 +156,41 @@ export default function LoginPage() {
               </span>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-5">
               <h1 className="text-2xl font-bold text-gray-900">Selamat Datang</h1>
               <p className="text-sm text-gray-500 mt-1">Silakan masukkan akun Anda untuk mulai mengelola pengiriman.</p>
             </div>
 
-            <form className="space-y-4 mt-6" onSubmit={onSubmit} noValidate>
+            {/* Quick Demo Account Selector */}
+            <div className="mb-5 rounded-xl border border-primary/15 bg-primary/5 p-3.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-primary mb-2">
+                <Sparkles className="size-3.5" />
+                <span>Akses Cepat Demo Portofolio (Klik untuk Isi Otomatis)</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {DEMO_ACCOUNTS.map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => applyDemoAccount(acc.email, acc.password)}
+                    className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-left text-xs transition-all ${
+                      fields.email === acc.email
+                        ? "border-primary bg-primary text-white shadow-sm"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-primary/40 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="font-bold">{acc.label}</span>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                      fields.email === acc.email ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
+                    }`}>
+                      {acc.badge}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form className="space-y-4" onSubmit={onSubmit} noValidate>
               <div className="space-y-1">
                 <label htmlFor="email" className="block text-sm font-bold text-gray-900 mb-1">Email atau Username</label>
                 <Input
@@ -160,7 +198,7 @@ export default function LoginPage() {
                   type="text"
                   icon={<User className="h-4 w-4" />}
                   value={fields.email}
-                  placeholder="Contoh: admin.logistik@email.com"
+                  placeholder="Contoh: admin@sistem.com"
                   className="rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent py-2.5"
                   onChange={(e) => setFields((prev) => ({ ...prev, email: e.target.value }))}
                   onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
@@ -171,7 +209,7 @@ export default function LoginPage() {
               <div className="space-y-1">
                 <div className="flex justify-between items-center mb-1">
                   <label htmlFor="password" className="text-sm font-bold text-gray-900">Password</label>
-                  <button type="button" onClick={() => setStatusMessage("Fitur Lupa Password belum tersedia.")} className="text-sm font-bold text-gray-500 hover:text-gray-600 transition-colors">
+                  <button type="button" onClick={() => setStatusMessage("Gunakan password demo: password123")} className="text-sm font-bold text-gray-500 hover:text-gray-600 transition-colors">
                     Lupa Password?
                   </button>
                 </div>
@@ -230,13 +268,37 @@ export default function LoginPage() {
 
       {/* Mobile Layout */}
       <div className="md:hidden min-h-screen bg-primary flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm flex flex-col relative z-10">
-          <div className="flex flex-col items-center mb-6">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 mb-4">
+        <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm flex flex-col relative z-10">
+          <div className="flex flex-col items-center mb-5">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 mb-3">
               <Package className="size-6 text-primary" strokeWidth={2} />
             </div>
             <h1 className="text-xl font-bold text-primary text-center leading-tight">Sistem Distribusi Paket<br/>Di Perumahan</h1>
-            <p className="text-xs text-gray-500 text-center mt-2">Efisiensi pengiriman langsung ke depan pintu Anda.</p>
+            <p className="text-xs text-gray-500 text-center mt-1.5">Efisiensi pengiriman langsung ke depan pintu Anda.</p>
+          </div>
+
+          {/* Mobile Quick Demo Account Selector */}
+          <div className="mb-4 rounded-xl border border-primary/15 bg-primary/5 p-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary mb-2">
+              <Sparkles className="size-3" />
+              <span>Akun Demo (Klik untuk Isi)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {DEMO_ACCOUNTS.map((acc) => (
+                <button
+                  key={acc.email}
+                  type="button"
+                  onClick={() => applyDemoAccount(acc.email, acc.password)}
+                  className={`flex items-center justify-between rounded-lg border px-2 py-1.5 text-left text-[11px] transition-all ${
+                    fields.email === acc.email
+                      ? "border-primary bg-primary text-white"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  <span className="font-bold">{acc.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <form className="space-y-4 w-full" onSubmit={onSubmit} noValidate>
@@ -258,7 +320,7 @@ export default function LoginPage() {
             <div className="space-y-1">
               <div className="flex justify-between items-center mb-1">
                 <label htmlFor="passwordMobile" className="text-xs font-bold text-gray-900">Password</label>
-                <button type="button" onClick={() => setStatusMessage("Fitur Lupa Password belum tersedia.")} className="text-xs font-bold text-amber-500 hover:text-amber-600 transition-colors">
+                <button type="button" onClick={() => setStatusMessage("Gunakan password demo: password123")} className="text-xs font-bold text-amber-500 hover:text-amber-600 transition-colors">
                   Lupa Password?
                 </button>
               </div>
@@ -298,7 +360,6 @@ export default function LoginPage() {
               </p>
             )}
           </form>
-
         </div>
       </div>
     </main>

@@ -2,7 +2,7 @@ import AppShell from '@/components/shell/AppShell';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { requireAdminSession } from '@/lib/require-admin-session';
-import { serverApiFetch } from '@/lib/api-client';
+import { getActivityLogs } from '@/lib/activity-logger';
 
 type ActivityLogItem = {
   id: string;
@@ -27,8 +27,7 @@ function formatDate(value: string | Date) {
 export default async function AdminLoggingPage() {
   await requireAdminSession();
 
-  const res = await serverApiFetch('/api/activity-logs?limit=100');
-  const logs = (res.data || []) as ActivityLogItem[];
+  const logs = (await getActivityLogs(100, 0)) as ActivityLogItem[];
 
   return (
     <AppShell active="logging">
@@ -55,8 +54,13 @@ export default async function AdminLoggingPage() {
                     <Badge variant="primary" className="w-fit">{formatDate(log.createdAt)}</Badge>
                   </div>
                   <div className="mt-3 text-sm text-text-body">
-                    <p><span className="font-bold">Actor:</span> {log.user?.name || 'Sistem'} {log.user?.role ? `(${log.user.role})` : ''}</p>
-                    <p className="break-words"><span className="font-bold">Details:</span> {log.details || '-'}</p>
+                    <p>
+                      <span className="font-bold">Actor:</span> {log.user?.name || 'Sistem'}{' '}
+                      {log.user?.role ? `(${log.user.role})` : ''}
+                    </p>
+                    <p className="break-words">
+                      <span className="font-bold">Details:</span> {log.details || '-'}
+                    </p>
                   </div>
                 </div>
               ))}

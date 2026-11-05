@@ -2,7 +2,6 @@ import prisma from '@/lib/prisma';
 
 export class RumahRepository {
   static async findAll(searchQuery?: string) {
-    // Siapkan kondisi WHERE jika ada kata kunci pencarian
     const whereClause = searchQuery
       ? {
           OR: [
@@ -26,19 +25,24 @@ export class RumahRepository {
       },
       orderBy: [
         { blok: 'asc' },
-        { nomor: 'asc' } // Tambahan: urutkan nomor juga agar lebih rapi di UI Satpam
+        { nomor: 'asc' },
       ],
     });
   }
 
   static async getMappingStats() {
-    return {
-      total: await prisma.rumah.count(),
-      occupied: await prisma.rumah.count({
+    const [total, occupied] = await Promise.all([
+      prisma.rumah.count(),
+      prisma.rumah.count({
         where: {
-          penghuni: { some: {} }
-        }
-      })
+          penghuni: { some: {} },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      occupied,
     };
   }
 

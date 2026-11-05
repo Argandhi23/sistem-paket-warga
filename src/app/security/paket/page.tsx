@@ -1,13 +1,12 @@
 import AppShell from '@/components/shell/AppShell';
 import PackageManagementTable from '@/components/admin/PackageManagementTable';
 import Link from 'next/link';
-import { serverApiFetch } from '@/lib/api-client';
+import { PackageService } from '@/services/package.service';
 import { Button } from '@/components/ui/Button';
 import { ChevronRight, PackagePlus } from 'lucide-react';
 
 export default async function SecurityPaketListPage() {
-  // 1. Fetch data paket via API (Layered Architecture)
-  const { data: initialPackages = [] } = await serverApiFetch('/api/packages');
+  const initialPackages = await PackageService.listForAdmin({});
 
   return (
     <AppShell active="paket">
@@ -33,9 +32,9 @@ export default async function SecurityPaketListPage() {
 
             <Link href="/security/paket/tambah">
               <Button variant="secondary" className="rounded-xl px-8 py-4 shadow-lg shadow-secondary/20 gap-2 text-base">
-                 <PackagePlus size={20} />
-                 Registrasi Paket Baru
-               </Button>
+                <PackagePlus size={20} />
+                Registrasi Paket Baru
+              </Button>
             </Link>
           </header>
 
@@ -44,7 +43,7 @@ export default async function SecurityPaketListPage() {
           </div>
         </section>
 
-        {/* Floating Action Button for mobile/quick access as seen in mockup */}
+        {/* Floating Action Button for mobile/quick access */}
         <div className="fixed bottom-8 right-8 z-40 md:hidden">
           <Link href="/security/paket/tambah">
             <button className="flex size-14 items-center justify-center rounded-full bg-primary text-white shadow-2xl hover:scale-110 active:scale-95 transition-all">

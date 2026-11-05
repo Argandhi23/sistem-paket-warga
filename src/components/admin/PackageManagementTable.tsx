@@ -377,15 +377,17 @@ export default function PackageManagementTable({
             <div className="mt-6 flex justify-end gap-3">
               <Button
                 variant="outline"
+                disabled={deleting}
                 onClick={() => setDeleteTarget(null)}
               >
                 Batal
               </Button>
               <Button
                 variant="danger"
+                disabled={deleting}
                 onClick={submitDelete}
               >
-                Ya, Hapus
+                {deleting ? 'Menghapus...' : 'Ya, Hapus'}
               </Button>
             </div>
           </Card>

@@ -2,26 +2,32 @@ import AppShell from '@/components/shell/AppShell';
 import PackageManagementTable from '@/components/admin/PackageManagementTable';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { serverApiFetch } from '@/lib/api-client';
+import { PackageService } from '@/services/package.service';
 import { FilterPanel } from '@/components/shell/FilterPanel';
 import { Card } from '@/components/ui/Card';
 
-export default async function WargaPaketListPage({ searchParams }: { searchParams?: Promise<{ courier?: string; startDate?: string; endDate?: string }> }) {
+export default async function WargaPaketListPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ courier?: string; startDate?: string; endDate?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   const params = (await searchParams) ?? {};
-  const courier = params.courier || '';
-  const startDate = params.startDate || '';
-  const endDate = params.endDate || '';
+  const courier = params.courier || undefined;
+  const startDate = params.startDate || undefined;
+  const endDate = params.endDate || undefined;
 
-  const queryParts: string[] = [];
-  if (courier) queryParts.push(`courier=${encodeURIComponent(courier)}`);
-  if (startDate) queryParts.push(`startDate=${encodeURIComponent(startDate)}`);
-  if (endDate) queryParts.push(`endDate=${encodeURIComponent(endDate)}`);
-  const queryString = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+  const unitNumber = session?.user?.unitNumber ?? null;
+  const errorMessage = !unitNumber ? 'Unit belum ditautkan ke akun Anda. Hubungi Administrator.' : null;
 
-  const res = await serverApiFetch(`/api/packages${queryString}`);
-  const myPackages = res.data || [];
-  const errorMessage = !res.success ? res.message : null;
+  const myPackages = unitNumber
+    ? await PackageService.listForAdmin({
+        unit: unitNumber,
+        courier,
+        startDate,
+        endDate,
+      })
+    : [];
 
   return (
     <AppShell active="paket-saya">
@@ -44,7 +50,7 @@ export default async function WargaPaketListPage({ searchParams }: { searchParam
           </Card>
         )}
 
-        <PackageManagementTable rows={myPackages as any} hideActions={true} />
+        <PackageManagementTable rows={myPackages} hideActions={true} />
       </section>
     </AppShell>
   );

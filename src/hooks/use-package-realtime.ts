@@ -1,26 +1,29 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase-client';
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-// Sesuaikan dengan tipe data Package dari Prisma jika perlu
-export function usePackageRealtime(onPayload: (payload: any) => void) {
+export type PackageRealtimePayload = RealtimePostgresChangesPayload<Record<string, unknown>>;
+
+export function usePackageRealtime(onPayload: (payload: PackageRealtimePayload) => void) {
   useEffect(() => {
-    // 1. Inisialisasi channel untuk tabel Package
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) return;
+
     const channel = supabase
       .channel('public:Package')
       .on(
         'postgres_changes',
         {
-          event: '*', // Mendengarkan INSERT, UPDATE, dan DELETE
+          event: '*',
           schema: 'public',
           table: 'Package',
         },
         (payload) => {
-          onPayload(payload);
+          onPayload(payload as PackageRealtimePayload);
         }
       )
       .subscribe();
 
-    // 2. Cleanup subscription saat komponen unmount
     return () => {
       supabase.removeChannel(channel);
     };

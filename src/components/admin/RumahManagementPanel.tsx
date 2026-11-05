@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Home, Pencil, Search, Trash2, UserRoundSearch, Users, X } from 'lucide-react';
-import { useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
@@ -54,11 +53,17 @@ function formatTanggal(value?: string) {
   }).format(date);
 }
 
-export default function RumahManagementPanel() {
-  const [rumah, setRumah] = useState<Rumah[]>([]);
-  const [warga, setWarga] = useState<UserWarga[]>([]);
+export default function RumahManagementPanel({
+  initialRumah = [],
+  initialWarga = [],
+}: {
+  initialRumah?: Rumah[];
+  initialWarga?: UserWarga[];
+}) {
+  const [rumah, setRumah] = useState<Rumah[]>(initialRumah);
+  const [warga, setWarga] = useState<UserWarga[]>(initialWarga);
   const [status, setStatus] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialRumah.length === 0 && initialWarga.length === 0);
   const [usersApiReady, setUsersApiReady] = useState(true);
 
   const [rumahModalOpen, setRumahModalOpen] = useState(false);
@@ -141,8 +146,10 @@ export default function RumahManagementPanel() {
   }, [loadRumah, loadWarga]);
 
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    if (initialRumah.length === 0 && initialWarga.length === 0) {
+      refreshData();
+    }
+  }, [initialRumah.length, initialWarga.length, refreshData]);
 
   function openCreateModal() {
     setStatus('');
@@ -201,7 +208,7 @@ export default function RumahManagementPanel() {
 
         if (unmapPromises.length > 0) {
           const unmapResults = await Promise.all(unmapPromises);
-          const hasFailedUnmap = unmapResults.some((response) => !response.ok);
+          const hasFailedUnmap = unmapResults.some((res) => !res.ok);
           if (hasFailedUnmap) {
             setStatus('Data rumah tersimpan, tetapi pembaruan pemetaan penghuni lama belum berhasil.');
             setRumahModalOpen(false);
@@ -266,7 +273,6 @@ export default function RumahManagementPanel() {
     <div className="flex flex-col gap-8 pb-8">
       {/* Premium Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-8 shadow-2xl sm:px-10 sm:py-12 mt-4 md:mt-0">
-        {/* Decorative Elements */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
         <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-secondary/10 blur-3xl"></div>
         
@@ -312,15 +318,15 @@ export default function RumahManagementPanel() {
         </div>
 
         <div className="mb-6 max-w-sm rounded-xl bg-bg-card shadow-sm border border-border-light p-3">
-        <Input
-          label="Cari Hunian"
-          id="cari-unit"
-          icon={<Search size={16} />}
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Cari blok atau nomor unit"
-        />
-      </div>
+          <Input
+            label="Cari Hunian"
+            id="cari-unit"
+            icon={<Search size={16} />}
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Cari blok atau nomor unit"
+          />
+        </div>
 
         <div className="rounded-2xl bg-bg-card shadow-md border border-border-light overflow-hidden mt-6">
           <div className="table-container">
@@ -395,163 +401,163 @@ export default function RumahManagementPanel() {
           </div>
         </div>
 
-      {!usersApiReady ? (
-        <p className="mt-3 text-xs text-secondary-dark">
-          API list user belum tersedia penuh. Pemetaan warga di modal menggunakan data yang tersedia.
-        </p>
-      ) : null}
+        {!usersApiReady ? (
+          <p className="mt-3 text-xs text-secondary-dark">
+            API list user belum tersedia penuh. Pemetaan warga di modal menggunakan data yang tersedia.
+          </p>
+        ) : null}
 
-      <p className="mt-3 min-h-5 text-sm text-text-muted">{status}</p>
+        <p className="mt-3 min-h-5 text-sm text-text-muted">{status}</p>
 
-      {rumahModalOpen ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-xl overflow-hidden shadow-2xl rounded-3xl border-0 bg-bg-card flex flex-col max-h-[90vh]">
-            <div className="relative overflow-hidden bg-primary px-6 py-8 sm:px-10 shrink-0">
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-secondary/10 blur-3xl"></div>
-              
-              <div className="relative z-10 flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">Detail Hunian</h2>
-                  <p className="mt-2 text-sm text-blue-100/90 leading-relaxed max-w-md">
-                    Konfigurasi hunian perumahan/apartemen dan pemetaan penghuni.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => !saving && setRumahModalOpen(false)}
-                  className="rounded-full bg-white/10 p-2.5 text-white transition-all hover:bg-white/20 hover:scale-105 backdrop-blur-md shadow-sm shrink-0"
-                  aria-label="Tutup modal detail unit"
-                  disabled={saving}
-                >
-                  <X size={20} strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-
-            <div className="px-6 py-6 overflow-y-auto">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  label="Blok / Tower"
-                  icon={<Home size={16} />}
-                  value={rumahDraft.blok}
-                  onChange={(event) => setRumahDraft((prev) => ({ ...prev, blok: event.target.value }))}
-                  placeholder="Contoh: Blok A / Tower A"
-                  className="py-2.5"
-                />
-                <Input
-                  label="Nomor Rumah / Unit"
-                  icon={<Home size={16} />}
-                  value={rumahDraft.nomor}
-                  onChange={(event) => setRumahDraft((prev) => ({ ...prev, nomor: event.target.value }))}
-                  placeholder="Contoh: 12 / A-12"
-                  className="py-2.5"
-                />
-              </div>
-
-              <div className="mt-5">
-                <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary-dark shadow-sm">
-                  Kode Unit Terbentuk: <span className="font-bold">{rumahDraft.blok || '-'} - {rumahDraft.nomor || '-'}</span>
-                </div>
-
-                <Select
-                  label="Pemetaan Warga Penghuni"
-                  icon={<UserRoundSearch size={16} />}
-                  value={rumahDraft.userId}
-                  onChange={(event) => setRumahDraft((prev) => ({ ...prev, userId: event.target.value }))}
-                  options={[
-                    { value: '', label: 'Tanpa penghuni / batalkan pemetaan' },
-                    ...availableWarga.map((item) => ({
-                      value: item.id,
-                      label: `${item.name ?? '-'} (${item.email ?? '-'})`,
-                    })),
-                  ]}
-                  className="py-2.5"
-                />
-                <p className="mt-1.5 text-xs text-text-muted">Pilih dari daftar warga yang sudah terdaftar di sistem.</p>
-
-                {rumahDraft.penghuniAktif.length > 0 ? (
-                  <div className="mt-4 rounded-xl border border-border-light bg-bg-card shadow-sm p-4">
-                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-text-muted">Penghuni Saat Ini</p>
-                    <div className="mt-2.5 flex flex-wrap gap-2">
-                      {rumahDraft.penghuniAktif.map((item) => (
-                        <Badge key={item.id} variant="primary" className="gap-1.5 px-3 py-1 shadow-sm">
-                          <Users size={14} />
-                          {item.name ?? item.email ?? item.id}
-                        </Badge>
-                      ))}
-                    </div>
+        {rumahModalOpen ? (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
+            <div className="w-full max-w-xl overflow-hidden shadow-2xl rounded-3xl border-0 bg-bg-card flex flex-col max-h-[90vh]">
+              <div className="relative overflow-hidden bg-primary px-6 py-8 sm:px-10 shrink-0">
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-secondary/10 blur-3xl"></div>
+                
+                <div className="relative z-10 flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">Detail Hunian</h2>
+                    <p className="mt-2 text-sm text-blue-100/90 leading-relaxed max-w-md">
+                      Konfigurasi hunian perumahan/apartemen dan pemetaan penghuni.
+                    </p>
                   </div>
-                ) : null}
+                  <button
+                    type="button"
+                    onClick={() => !saving && setRumahModalOpen(false)}
+                    className="rounded-full bg-white/10 p-2.5 text-white transition-all hover:bg-white/20 hover:scale-105 backdrop-blur-md shadow-sm shrink-0"
+                    aria-label="Tutup modal detail unit"
+                    disabled={saving}
+                  >
+                    <X size={20} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="px-6 py-6 overflow-y-auto">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="Blok / Tower"
+                    icon={<Home size={16} />}
+                    value={rumahDraft.blok}
+                    onChange={(event) => setRumahDraft((prev) => ({ ...prev, blok: event.target.value }))}
+                    placeholder="Contoh: Blok A / Tower A"
+                    className="py-2.5"
+                  />
+                  <Input
+                    label="Nomor Rumah / Unit"
+                    icon={<Home size={16} />}
+                    value={rumahDraft.nomor}
+                    onChange={(event) => setRumahDraft((prev) => ({ ...prev, nomor: event.target.value }))}
+                    placeholder="Contoh: 12 / A-12"
+                    className="py-2.5"
+                  />
+                </div>
+
+                <div className="mt-5">
+                  <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary-dark shadow-sm">
+                    Kode Unit Terbentuk: <span className="font-bold">{rumahDraft.blok || '-'} - {rumahDraft.nomor || '-'}</span>
+                  </div>
+
+                  <Select
+                    label="Pemetaan Warga Penghuni"
+                    icon={<UserRoundSearch size={16} />}
+                    value={rumahDraft.userId}
+                    onChange={(event) => setRumahDraft((prev) => ({ ...prev, userId: event.target.value }))}
+                    options={[
+                      { value: '', label: 'Tanpa penghuni / batalkan pemetaan' },
+                      ...availableWarga.map((item) => ({
+                        value: item.id,
+                        label: `${item.name ?? '-'} (${item.email ?? '-'})`,
+                      })),
+                    ]}
+                    className="py-2.5"
+                  />
+                  <p className="mt-1.5 text-xs text-text-muted">Pilih dari daftar warga yang sudah terdaftar di sistem.</p>
+
+                  {rumahDraft.penghuniAktif.length > 0 ? (
+                    <div className="mt-4 rounded-xl border border-border-light bg-bg-card shadow-sm p-4">
+                      <p className="text-[0.7rem] font-bold uppercase tracking-[0.08em] text-text-muted">Penghuni Saat Ini</p>
+                      <div className="mt-2.5 flex flex-wrap gap-2">
+                        {rumahDraft.penghuniAktif.map((item) => (
+                          <Badge key={item.id} variant="primary" className="gap-1.5 px-3 py-1 shadow-sm">
+                            <Users size={14} />
+                            {item.name ?? item.email ?? item.id}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-border-light px-6 py-5 bg-bg-card shrink-0">
+                <Button
+                  variant="ghost"
+                  onClick={() => !saving && setRumahModalOpen(false)}
+                  disabled={saving}
+                  className="font-bold text-text-muted hover:text-text-main"
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={saveRumah}
+                  disabled={saving}
+                  className="bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-6 shadow-md"
+                >
+                  {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </Button>
+              </div>
+              
+              <div className="border-t border-border-light bg-primary/5 px-6 py-4 shrink-0">
+                <p className="text-xs text-primary-dark text-center">
+                  Menghubungkan warga ke unit akan memberikan akses notifikasi paket dan akses area digital gedung.
+                </p>
               </div>
             </div>
-
-            <div className="flex items-center justify-end gap-3 border-t border-border-light px-6 py-5 bg-bg-card shrink-0">
-              <Button
-                variant="ghost"
-                onClick={() => !saving && setRumahModalOpen(false)}
-                disabled={saving}
-                className="font-bold text-text-muted hover:text-text-main"
-              >
-                Batal
-              </Button>
-              <Button
-                onClick={saveRumah}
-                disabled={saving}
-                className="bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-6 shadow-md"
-              >
-                {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </Button>
-            </div>
-            
-            <div className="border-t border-border-light bg-primary/5 px-6 py-4 shrink-0">
-              <p className="text-xs text-primary-dark text-center">
-                Menghubungkan warga ke unit akan memberikan akses notifikasi paket dan akses area digital gedung.
-              </p>
-            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {deleteTarget ? (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-md overflow-hidden shadow-2xl rounded-3xl border-0 bg-bg-card">
-            <div className="bg-danger/10 p-6 flex flex-col items-center text-center">
-              <div className="flex size-14 items-center justify-center rounded-full bg-danger/20 text-danger mb-4 shadow-inner">
-                <Trash2 size={24} />
+        {deleteTarget ? (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-text-main/40 p-4 backdrop-blur-[2px]">
+            <div className="w-full max-w-md overflow-hidden shadow-2xl rounded-3xl border-0 bg-bg-card">
+              <div className="bg-danger/10 p-6 flex flex-col items-center text-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-danger/20 text-danger mb-4 shadow-inner">
+                  <Trash2 size={24} />
+                </div>
+                <h2 className="text-xl font-bold text-danger-dark">Konfirmasi Hapus Unit</h2>
+                <p className="mt-2 text-sm text-danger-dark/80">
+                  Anda akan menghapus unit secara permanen.
+                </p>
               </div>
-              <h2 className="text-xl font-bold text-danger-dark">Konfirmasi Hapus Unit</h2>
-              <p className="mt-2 text-sm text-danger-dark/80">
-                Anda akan menghapus unit secara permanen.
-              </p>
-            </div>
-            <div className="px-6 py-6 text-center">
-              <p className="text-text-main text-base">
-                Apakah Anda yakin ingin menghapus unit <span className="font-bold text-lg block mt-2 text-danger">{deleteTarget.blok} - {deleteTarget.nomor}</span>
-              </p>
-              <p className="text-sm text-text-muted mt-2">Data yang sudah dihapus tidak dapat dikembalikan.</p>
-            </div>
-            <div className="flex items-center justify-end gap-3 border-t border-border-light bg-bg-card px-6 py-5">
-              <Button
-                variant="ghost"
-                onClick={() => !deleting && setDeleteTarget(null)}
-                disabled={deleting}
-                className="font-bold text-text-muted hover:text-text-main"
-              >
-                Batal
-              </Button>
-              <Button
-                variant="danger"
-                onClick={confirmDeleteRumah}
-                disabled={deleting}
-                className="font-bold py-2.5 px-6 shadow-md"
-              >
-                {deleting ? 'Menghapus...' : 'Ya, Hapus'}
-              </Button>
+              <div className="px-6 py-6 text-center">
+                <p className="text-text-main text-base">
+                  Apakah Anda yakin ingin menghapus unit <span className="font-bold text-lg block mt-2 text-danger">{deleteTarget.blok} - {deleteTarget.nomor}</span>
+                </p>
+                <p className="text-sm text-text-muted mt-2">Data yang sudah dihapus tidak dapat dikembalikan.</p>
+              </div>
+              <div className="flex items-center justify-end gap-3 border-t border-border-light bg-bg-card px-6 py-5">
+                <Button
+                  variant="ghost"
+                  onClick={() => !deleting && setDeleteTarget(null)}
+                  disabled={deleting}
+                  className="font-bold text-text-muted hover:text-text-main"
+                >
+                  Batal
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={confirmDeleteRumah}
+                  disabled={deleting}
+                  className="font-bold py-2.5 px-6 shadow-md"
+                >
+                  {deleting ? 'Menghapus...' : 'Ya, Hapus'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
       </div>
     </div>
   );

@@ -1,36 +1,41 @@
 import AppShell from '@/components/shell/AppShell';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { serverApiFetch } from '@/lib/api-client';
+import { PackageService } from '@/services/package.service';
 import { PackageHistorySection } from '@/components/shell/PackageHistorySection';
 import { Card } from '@/components/ui/Card';
+import type { PackageItem } from '@/components/admin/PackageManagementTable';
 
-export default async function RiwayatPengambilanPage({ searchParams }: { searchParams?: Promise<{ courier?: string; startDate?: string; endDate?: string; showFilter?: string }> }) {
+export default async function RiwayatPengambilanPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ courier?: string; startDate?: string; endDate?: string; showFilter?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   const params = (await searchParams) ?? {};
-  const courierFilter = params.courier || '';
-  const startFilter = params.startDate || '';
-  const endFilter = params.endDate || '';
+  const courierFilter = params.courier || undefined;
+  const startFilter = params.startDate || undefined;
+  const endFilter = params.endDate || undefined;
 
-  const hasUnit = !!session?.user?.unitNumber;
-  const errorMessage = !hasUnit ? "Unit belum ditautkan" : null;
+  const unitNumber = session?.user?.unitNumber ?? null;
+  const errorMessage = !unitNumber ? 'Unit belum ditautkan' : null;
 
   let stats = { pickedUp: 0 };
-  let historyPackages: any[] = [];
+  let historyPackages: PackageItem[] = [];
 
-  if (hasUnit) {
-    const statsRes = await serverApiFetch('/api/packages/stats');
-    stats = statsRes.data || { pickedUp: 0 };
-
-    const historyQuery = new URLSearchParams({
-      status: 'DELIVERED_TO_WARGA',
-      ...(courierFilter && { courier: courierFilter }),
-      ...(startFilter && { startDate: startFilter }),
-      ...(endFilter && { endDate: endFilter }),
-    }).toString();
-
-    const historyRes = await serverApiFetch(`/api/packages?${historyQuery}`);
-    historyPackages = (historyRes.data || []).slice(0, 10);
+  if (unitNumber) {
+    const [statsData, packagesData] = await Promise.all([
+      PackageService.getPackageStats({ role: 'WARGA', unitNumber }),
+      PackageService.listForAdmin({
+        unit: unitNumber,
+        status: 'DELIVERED_TO_WARGA',
+        courier: courierFilter,
+        startDate: startFilter,
+        endDate: endFilter,
+      }),
+    ]);
+    stats = statsData;
+    historyPackages = packagesData.slice(0, 10);
   }
 
   return (

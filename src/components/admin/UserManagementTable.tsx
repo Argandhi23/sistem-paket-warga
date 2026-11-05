@@ -1,7 +1,7 @@
 'use client';
 
 import { Mail, Pencil, Search, ShieldCheck, Trash2, User2, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -42,6 +42,7 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
   const [tableRows, setTableRows] = useState<UserItem[]>(rows);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -80,8 +81,12 @@ export default function UserManagementTable({ rows, activeRole, activeSort }: Us
   }, [rows]);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     loadUsersFromApi();
-  }, [loadUsersFromApi]);
+  }, [debouncedSearchQuery, loadUsersFromApi]);
 
   const emptyState = useMemo(() => tableRows.length === 0, [tableRows.length]);
 

@@ -2,6 +2,12 @@ import prisma from "@/lib/prisma";
 import { Prisma, PackageStatus } from "@prisma/client";
 import { getExpiryThresholdDate } from "@/lib/expiry";
 
+const VALID_STATUSES = new Set<string>([
+  PackageStatus.RECEIVED_BY_SECURITY,
+  PackageStatus.DELIVERED_TO_WARGA,
+  PackageStatus.EXPIRED,
+]);
+
 export class PackageRepository {
   static async findWithFilters(params: {
     unitNumber?: string;
@@ -9,15 +15,27 @@ export class PackageRepository {
     courier?: string;
     startDate?: string;
     endDate?: string;
-    sort?: 'asc' | 'desc';
+    sort?: "asc" | "desc";
+    search?: string;
   }) {
-    const where: any = {};
+    const where: Prisma.PackageWhereInput = {};
     if (params.unitNumber) where.unitNumber = params.unitNumber;
-    if (params.status && params.status !== 'SEMUA') where.status = params.status;
-    if (params.courier) {
-      where.courierName = { contains: params.courier, mode: 'insensitive' };
+    if (params.status && params.status !== "SEMUA" && VALID_STATUSES.has(params.status)) {
+      where.status = params.status as PackageStatus;
     }
-    
+    if (params.courier) {
+      where.courierName = { contains: params.courier, mode: "insensitive" };
+    }
+    if (params.search && params.search.trim()) {
+      const q = params.search.trim();
+      where.OR = [
+        { trackingNumber: { contains: q, mode: "insensitive" } },
+        { courierName: { contains: q, mode: "insensitive" } },
+        { recipientName: { contains: q, mode: "insensitive" } },
+        { unitNumber: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
     if (params.startDate || params.endDate) {
       where.receivedAt = {};
       if (params.startDate) where.receivedAt.gte = new Date(params.startDate);
@@ -32,30 +50,34 @@ export class PackageRepository {
       where,
       include: {
         security: { select: { name: true } },
-        warga: { select: { name: true } }
+        warga: { select: { name: true } },
       },
-      orderBy: { receivedAt: params.sort || 'desc' },
+      orderBy: { receivedAt: params.sort || "desc" },
     });
   }
 
-  static async getStats(filters: { wargaId?: string } = {}) {
+  static async getStats(filters: { wargaId?: string; unitNumber?: string } = {}) {
+    const where: Prisma.PackageWhereInput = {};
+    if (filters.wargaId) where.wargaId = filters.wargaId;
+    if (filters.unitNumber) where.unitNumber = filters.unitNumber;
+
     const [counts, aggregate] = await Promise.all([
       prisma.package.groupBy({
-        by: ['status'],
-        where: filters,
+        by: ["status"],
+        where,
         _count: { _all: true },
       }),
       prisma.package.aggregate({
-        where: filters,
-        _sum: { penaltyAmount: true }
-      })
+        where,
+        _sum: { penaltyAmount: true },
+      }),
     ]);
 
     return {
-      total: counts.reduce((acc, c: any) => acc + c._count._all, 0),
-      pending: counts.find(s => s.status === 'RECEIVED_BY_SECURITY')?._count._all || 0,
-      pickedUp: counts.find(s => s.status === 'DELIVERED_TO_WARGA')?._count._all || 0,
-      expired: counts.find(s => s.status === 'EXPIRED')?._count._all || 0,
+      total: counts.reduce((acc, c) => acc + c._count._all, 0),
+      pending: counts.find((s) => s.status === "RECEIVED_BY_SECURITY")?._count._all || 0,
+      pickedUp: counts.find((s) => s.status === "DELIVERED_TO_WARGA")?._count._all || 0,
+      expired: counts.find((s) => s.status === "EXPIRED")?._count._all || 0,
       totalPenalty: aggregate._sum.penaltyAmount || 0,
     };
   }
@@ -76,11 +98,14 @@ export class PackageRepository {
     });
   }
 
-  static async handoverPackage(id: string, data: {
-    pickedUpBy: string;
-    penaltyAmount: number;
-    penaltyPaid: boolean;
-  }) {
+  static async handoverPackage(
+    id: string,
+    data: {
+      pickedUpBy: string;
+      penaltyAmount: number;
+      penaltyPaid: boolean;
+    }
+  ) {
     return await prisma.package.update({
       where: { id },
       data: {
@@ -140,65 +165,82 @@ export class PackageRepository {
     });
 
     const dailyData: Record<string, { date: string; entry: number; pickup: number }> = {};
-    
+
     for (let i = 0; i < days; i++) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateKey = d.toISOString().split('T')[0];
+      const dateKey = d.toISOString().split("T")[0];
       dailyData[dateKey] = { date: dateKey, entry: 0, pickup: 0 };
     }
 
     logs.forEach((log) => {
-      const entryKey = log.receivedAt.toISOString().split('T')[0];
+      const entryKey = log.receivedAt.toISOString().split("T")[0];
       if (dailyData[entryKey]) {
         dailyData[entryKey].entry++;
       }
       if (log.pickedUpAt) {
-        const pickupKey = log.pickedUpAt.toISOString().split('T')[0];
+        const pickupKey = log.pickedUpAt.toISOString().split("T")[0];
         if (dailyData[pickupKey]) {
           dailyData[pickupKey].pickup++;
         }
       }
     });
 
-    return Object.values(dailyData)
-      .sort((a, b) => a.date.localeCompare(b.date));
+    return Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date));
   }
 
   static async getAnalyticsSummary() {
     const [byBlock, byStatus, monthlyPenalty] = await Promise.all([
-      // 1. Distribusi per Blok (Unit format assumed: BLOK-NOMOR)
       prisma.package.groupBy({
-        by: ['unitNumber'],
+        by: ["unitNumber"],
         _count: { _all: true },
       }),
-      // 2. Status Saat Ini
       prisma.package.groupBy({
-        by: ['status'],
+        by: ["status"],
         _count: { _all: true },
       }),
-      // 3. Riwayat Denda (Basic grouping by date)
       prisma.package.findMany({
         where: { penaltyAmount: { gt: 0 } },
-        select: { pickedUpAt: true, penaltyAmount: true }
-      })
+        select: { pickedUpAt: true, penaltyAmount: true },
+      }),
     ]);
 
-    // Process blocks in memory
     const blockMap: Record<string, number> = {};
-    byBlock.forEach(item => {
-      const block = item.unitNumber.split('-')[0] || 'Lainnya';
+    byBlock.forEach((item) => {
+      const block = item.unitNumber.split("-")[0] || "Lainnya";
       blockMap[block] = (blockMap[block] || 0) + item._count._all;
     });
 
-    // Process monthly penalty
     const monthMap: Record<string, number> = {
-      'Jan': 0, 'Feb': 0, 'Mar': 0, 'Apr': 0, 'Mei': 0, 'Jun': 0,
-      'Jul': 0, 'Agu': 0, 'Sep': 0, 'Okt': 0, 'Nov': 0, 'Des': 0
+      Jan: 0,
+      Feb: 0,
+      Mar: 0,
+      Apr: 0,
+      Mei: 0,
+      Jun: 0,
+      Jul: 0,
+      Agu: 0,
+      Sep: 0,
+      Okt: 0,
+      Nov: 0,
+      Des: 0,
     };
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    
-    monthlyPenalty.forEach(p => {
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "Mei",
+      "Jun",
+      "Jul",
+      "Agu",
+      "Sep",
+      "Okt",
+      "Nov",
+      "Des",
+    ];
+
+    monthlyPenalty.forEach((p) => {
       if (p.pickedUpAt) {
         const m = p.pickedUpAt.getMonth();
         monthMap[monthNames[m]] += p.penaltyAmount;
@@ -207,8 +249,8 @@ export class PackageRepository {
 
     return {
       distributionByBlock: Object.entries(blockMap).map(([name, value]) => ({ name, value })),
-      statusStats: byStatus.map(s => ({ name: s.status, value: s._count._all })),
-      penaltyHistory: Object.entries(monthMap).map(([name, value]) => ({ name, value }))
+      statusStats: byStatus.map((s) => ({ name: s.status, value: s._count._all })),
+      penaltyHistory: Object.entries(monthMap).map(([name, value]) => ({ name, value })),
     };
   }
 }

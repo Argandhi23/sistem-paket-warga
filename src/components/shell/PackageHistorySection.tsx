@@ -3,15 +3,16 @@
 import { useState } from 'react';
 import { FilterButton } from '@/components/shell/FilterButton';
 import { FilterPanel } from '@/components/shell/FilterPanel';
-import { Package, CheckCircle2, History, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { CheckCircle2, History, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { TableSkeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBanner } from '@/components/ui/ErrorState';
+import { PackageDetailModal } from '@/components/modal/PackageDetailModal';
+import type { PackageItem } from '@/components/admin/PackageManagementTable';
 
 type PackageRowProps = {
-  packages: any[];
+  packages: PackageItem[];
   totalCount: number;
   baseUrl: string;
   isLoading?: boolean;
@@ -30,6 +31,7 @@ export function PackageHistorySection({
   onResetFilter
 }: PackageRowProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<PackageItem | null>(null);
 
   return (
     <div className="flex flex-col gap-6 mt-4">
@@ -39,13 +41,13 @@ export function PackageHistorySection({
         <div className="p-6 border-b border-border-light bg-bg-card">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-               <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <History size={20} className="text-primary" />
-               </div>
-               <div>
-                  <h2 className="text-xl font-bold text-text-main tracking-tight">Riwayat Pengambilan</h2>
-                  <p className="text-xs text-text-muted">Daftar paket yang telah Anda terima sebelumnya.</p>
-               </div>
+              <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <History size={20} className="text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-text-main tracking-tight">Riwayat Pengambilan</h2>
+                <p className="text-xs text-text-muted">Daftar paket yang telah Anda terima sebelumnya.</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <FilterButton isOpen={isFilterOpen} onToggle={() => setIsFilterOpen(!isFilterOpen)} />
@@ -86,7 +88,7 @@ export function PackageHistorySection({
                   </td>
                 </tr>
               ) : (
-                packages.map((pkg: any, index: number) => (
+                packages.map((pkg, index) => (
                   <tr key={pkg.id} className="border-b border-border-light text-text-body last:border-b-0 transition-colors hover:bg-bg-header/30">
                     <td className="px-6 py-4 text-center font-medium text-text-muted text-sm">{index + 1}</td>
                     <td className="px-6 py-4 font-bold text-text-muted/60 tracking-tight text-sm">{pkg.trackingNumber || '-'}</td>
@@ -105,7 +107,11 @@ export function PackageHistorySection({
                       </Badge>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button className="text-primary font-bold text-sm hover:underline flex items-center gap-1 mx-auto group">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPackage(pkg)}
+                        className="text-primary font-bold text-sm hover:underline flex items-center gap-1 mx-auto group"
+                      >
                         Detail <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                       </button>
                     </td>
@@ -120,17 +126,30 @@ export function PackageHistorySection({
           <p className="text-sm text-text-muted font-medium">
             Menampilkan <span className="font-bold text-text-main">{packages.length}</span> dari <span className="font-bold text-text-main">{totalCount}</span> riwayat
           </p>
-          <div className="flex items-center gap-1">
-            <button className="size-9 flex items-center justify-center rounded-xl border border-border-light text-text-muted hover:bg-bg-header transition-all">&lt;</button>
-            <button className="size-9 flex items-center justify-center rounded-xl bg-primary text-white text-xs font-black shadow-md">1</button>
-            <button className="size-9 flex items-center justify-center rounded-xl border border-border-light text-text-muted text-xs font-bold hover:bg-bg-header">2</button>
-            <button className="size-9 flex items-center justify-center rounded-xl border border-border-light text-text-muted text-xs font-bold hover:bg-bg-header">3</button>
-            <span className="px-2 text-text-muted">...</span>
-            <button className="size-9 flex items-center justify-center rounded-xl border border-border-light text-text-muted text-xs font-bold hover:bg-bg-header">8</button>
-            <button className="size-9 flex items-center justify-center rounded-xl border border-border-light text-text-muted hover:bg-bg-header transition-all">&gt;</button>
-          </div>
         </div>
       </div>
+
+      {selectedPackage && (
+        <PackageDetailModal
+          open={!!selectedPackage}
+          onClose={() => setSelectedPackage(null)}
+          isSecurity={false}
+          paket={{
+            id: selectedPackage.id,
+            trackingNumber: selectedPackage.trackingNumber || '',
+            status: 'Sudah Diambil',
+            courierName: selectedPackage.courierName,
+            recipientName: selectedPackage.recipientName,
+            receivedAt: selectedPackage.receivedAt,
+            storedAt: `Pos Security - Unit ${selectedPackage.unitNumber}`,
+            receivedBy: selectedPackage.security?.name || 'Petugas',
+            pickedUpAt: selectedPackage.pickedUpAt,
+            pickedUpBy: selectedPackage.pickedUpBy,
+            penaltyAmount: selectedPackage.penaltyAmount,
+            penaltyPaid: selectedPackage.penaltyPaid,
+          }}
+        />
+      )}
     </div>
   );
 }

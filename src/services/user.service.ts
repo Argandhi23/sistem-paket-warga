@@ -38,6 +38,7 @@ function sanitizeUser(user: {
     email: user.email,
     role: user.role,
     unitNumber: user.unitNumber ?? null,
+    rumahId: user.rumah?.id ?? null,
     rumah: user.rumah ?? null,
   };
 }

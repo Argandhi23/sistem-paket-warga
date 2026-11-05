@@ -42,6 +42,11 @@ model User {
   packages         Package[] @relation("WargaPackages")
   recordedPackages Package[] @relation("SecurityRecordedPackages")
   activityLogs     ActivityLog[]
+
+  @@index([role])
+  @@index([rumahId])
+  @@index([unitNumber])
+  @@index([createdAt])
 }
 
 model Rumah {
@@ -53,6 +58,8 @@ model Rumah {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([blok, nomor])
 }
 
 model Account {
@@ -72,6 +79,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -80,6 +88,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Package {
@@ -102,6 +112,12 @@ model Package {
 
   securityId     String
   security       User          @relation("SecurityRecordedPackages", fields: [securityId], references: [id])
+
+  @@index([unitNumber])
+  @@index([status])
+  @@index([receivedAt])
+  @@index([wargaId])
+  @@index([securityId])
 }
 
 // 🌟 TABEL BARU UNTUK TIKET JIRA: ACTIVITY LOG (AUDIT TRAIL)
@@ -116,4 +132,8 @@ model ActivityLog {
   user        User?    @relation(fields: [userId], references: [id])
   
   createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
 }

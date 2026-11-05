@@ -12,15 +12,11 @@ export const PENALTY_CONFIG = {
 
 export function calculatePenalty(receivedAt: Date | string, now: Date = new Date()) {
   const arrival = new Date(receivedAt);
-  
+
   // Hitung selisih hari
   const diffTime = Math.abs(now.getTime() - arrival.getTime());
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
-  const lateDays = Math.max(0, diffDays - (PENALTY_CONFIG.FREE_DAYS - 1)); // Jika diffDays=3 (hari ke-4), lateDays=1? 
-  // Biar simple sesuai image: "Jumlah Hari Telat: 5 hari" -> 10.000
-  // Kita asumsikan lateDays adalah diffDays - freeDays.
-  
+
   const actualLateDays = Math.max(0, diffDays - PENALTY_CONFIG.FREE_DAYS);
   const amount = actualLateDays * PENALTY_CONFIG.DAILY_RATE;
 

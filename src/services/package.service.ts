@@ -5,22 +5,43 @@ import { calculatePenalty as getPenaltyInfo, PENALTY_CONFIG } from '@/utils/pena
 import { logActivity } from '@/lib/activity-logger';
 import { Prisma } from '@prisma/client';
 
+// Cooldown 10 menit agar pembacaan halaman tidak terus-menerus menembak query UPDATE ke Supabase Free Tier
+const EXPIRY_SYNC_COOLDOWN_MS = 10 * 60 * 1000;
+let lastExpirySyncAt = 0;
+
 export class PackageService {
   /**
    * Mengambil daftar paket untuk Admin/Security.
-   * Melakukan pembersihan data expired sebelum mengambil list.
+   * Pembersihan data expired di-throttle maksimal 1x tiap 10 menit untuk menghemat kuota/koneksi Supabase Free Tier.
    */
-  static async listForAdmin(params: { 
-    unit?: string; 
-    status?: string; 
+  static async listForAdmin(params: {
+    unit?: string;
+    status?: string;
     sort?: string;
     courier?: string;
     startDate?: string;
     endDate?: string;
+    search?: string;
   }) {
-    // Jalankan pengecekan paket kadaluarsa di Service layer (Business Process)
-    // Sesuai Audit: Ini adalah business process, bukan repo responsibility.
-    await PackageRepository.updateExpiredPackages();
+    const now = Date.now();
+    const shouldSyncExpired = now - lastExpirySyncAt > EXPIRY_SYNC_COOLDOWN_MS;
+
+    if (shouldSyncExpired) {
+      lastExpirySyncAt = now;
+      const [, packages] = await Promise.all([
+        Promise.resolve(PackageRepository.updateExpiredPackages()).catch(() => null),
+        PackageRepository.findWithFilters({
+          unitNumber: params.unit,
+          status: params.status,
+          courier: params.courier,
+          startDate: params.startDate,
+          endDate: params.endDate,
+          sort: params.sort === 'lama' ? 'asc' : 'desc',
+          search: params.search,
+        }),
+      ]);
+      return packages;
+    }
 
     return await PackageRepository.findWithFilters({
       unitNumber: params.unit,
@@ -28,14 +49,19 @@ export class PackageService {
       courier: params.courier,
       startDate: params.startDate,
       endDate: params.endDate,
-      sort: params.sort === 'lama' ? 'asc' : 'desc'
+      sort: params.sort === 'lama' ? 'asc' : 'desc',
+      search: params.search,
     });
   }
 
-  static async getPackageStats(filters: { wargaId?: string; role: string }) {
-    const dbFilters: { wargaId?: string } = {};
-    if (filters.role === "WARGA") {
-      dbFilters.wargaId = filters.wargaId;
+  static async getPackageStats(filters: { wargaId?: string; unitNumber?: string; role: string }) {
+    const dbFilters: { wargaId?: string; unitNumber?: string } = {};
+    if (filters.role === 'WARGA') {
+      if (filters.unitNumber) {
+        dbFilters.unitNumber = filters.unitNumber;
+      } else {
+        dbFilters.wargaId = filters.wargaId;
+      }
     }
     return await PackageRepository.getStats(dbFilters);
   }
@@ -56,10 +82,9 @@ export class PackageService {
       throw new ApiError(400, 'Nomor unit rumah/apartemen wajib diisi');
     }
 
-    // SDPR-37/TestCases Skenario 1: Validasi unit ada di database Rumah
     const allRumah = await RumahRepository.findAll();
     const normalizeUnit = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const unitExists = allRumah.some(r => {
+    const unitExists = allRumah.some((r) => {
       const formattedUnit = `${r.blok}${r.nomor}`;
       return normalizeUnit(formattedUnit) === normalizeUnit(payload.unitNumber);
     });
@@ -72,18 +97,17 @@ export class PackageService {
       courierName: payload.courierName,
       recipientName: payload.recipientName,
       unitNumber: payload.unitNumber,
-      securityId: payload.securityId, // Disuplai dari Session di API layer (Secure)
+      securityId: payload.securityId,
       trackingNumber: payload.trackingNumber,
       wargaId: payload.wargaId,
     });
-    
-    // SDPR-41: Audit Trail
+
     await logActivity({
-      action: "PACKAGE_REGISTRATION",
-      entityType: "Package",
+      action: 'PACKAGE_REGISTRATION',
+      entityType: 'Package',
       entityId: newPackage.id,
       userId: payload.securityId,
-      details: { courier: payload.courierName, recipient: payload.recipientName }
+      details: { courier: payload.courierName, recipient: payload.recipientName },
     });
 
     return newPackage;
@@ -118,6 +142,7 @@ export class PackageService {
   }
 
   static async processExpiredPackages() {
+    lastExpirySyncAt = Date.now();
     return await PackageRepository.updateExpiredPackages();
   }
 
@@ -129,7 +154,7 @@ export class PackageService {
     return await PackageRepository.findWithFilters({
       unitNumber: unitNumber,
       status: 'SEMUA',
-      sort: 'desc'
+      sort: 'desc',
     });
   }
 
@@ -145,18 +170,18 @@ export class PackageService {
    * Helper untuk menghitung denda berdasarkan jumlah hari (digunakan API Penalty).
    */
   static calculatePenaltyFromDays(days: number): number {
-    // Sesuai instruksi PM dan referensi UI:
-    // - 3 Hari pertama gratis (Free).
-    // - Hari ke-4 dst dihitung Rp 2.000 / hari.
     const actualLateDays = Math.max(0, days - PENALTY_CONFIG.FREE_DAYS);
     return actualLateDays * PENALTY_CONFIG.DAILY_RATE;
   }
 
-  static async handoverPackage(id: string, payload: {
-    pickedUpBy: string;
-    penaltyAmount: number;
-    penaltyPaid: boolean;
-  }) {
+  static async handoverPackage(
+    id: string,
+    payload: {
+      pickedUpBy: string;
+      penaltyAmount: number;
+      penaltyPaid: boolean;
+    }
+  ) {
     if (!payload.pickedUpBy.trim()) {
       throw new ApiError(400, 'Nama pengambil wajib diisi');
     }
@@ -167,12 +192,11 @@ export class PackageService {
       penaltyPaid: payload.penaltyPaid,
     });
 
-    // SDPR-41: Audit Trail
     await logActivity({
-      action: "PACKAGE_HANDOVER",
-      entityType: "Package",
+      action: 'PACKAGE_HANDOVER',
+      entityType: 'Package',
       entityId: id,
-      details: { pickedUpBy: payload.pickedUpBy, penalty: payload.penaltyAmount }
+      details: { pickedUpBy: payload.pickedUpBy, penalty: payload.penaltyAmount },
     });
 
     return updatedPackage;
@@ -181,12 +205,12 @@ export class PackageService {
   static async getAnalytics(days: number = 30) {
     const [dailyVolume, summary] = await Promise.all([
       PackageRepository.getDailyVolume(days),
-      PackageRepository.getAnalyticsSummary()
+      PackageRepository.getAnalyticsSummary(),
     ]);
 
     return {
       dailyVolume,
-      ...summary
+      ...summary,
     };
   }
 }
