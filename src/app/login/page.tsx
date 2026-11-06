@@ -2,7 +2,7 @@
 
 import { SyntheticEvent, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
-import { Package, ShieldCheck, Clock, HelpCircle, Globe, LockKeyhole, Eye, EyeOff, User, ArrowRight, Sparkles } from "lucide-react";
+import { Package, ShieldCheck, Clock, HelpCircle, Globe, LockKeyhole, Eye, EyeOff, User, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
@@ -14,10 +14,10 @@ type FieldState = {
 };
 
 const DEMO_ACCOUNTS = [
-  { label: "Admin", email: "admin@sistem.com", password: "password123", badge: "ADMIN" },
-  { label: "Satpam", email: "security@sistem.com", password: "password123", badge: "SECURITY" },
-  { label: "Warga A-1", email: "warga.a@sistem.com", password: "password123", badge: "WARGA" },
-  { label: "Warga B-2", email: "warga.b@sistem.com", password: "password123", badge: "WARGA" },
+  { label: "Admin", email: "admin@sistem.com", password: "password123" },
+  { label: "Satpam", email: "security@sistem.com", password: "password123" },
+  { label: "Warga A-1", email: "warga.a@sistem.com", password: "password123" },
+  { label: "Warga B-2", email: "warga.b@sistem.com", password: "password123" },
 ];
 
 function getFieldErrors(fields: FieldState) {
@@ -147,7 +147,7 @@ export default function LoginPage() {
         {/* Right Panel */}
         <div className="bg-white flex flex-col justify-center px-12 py-10">
           <div className="max-w-md w-full mx-auto">
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-10">
               <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
                 <Package className="size-5 text-primary" strokeWidth={2} />
               </div>
@@ -156,41 +156,12 @@ export default function LoginPage() {
               </span>
             </div>
 
-            <div className="mb-5">
+            <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Selamat Datang</h1>
               <p className="text-sm text-gray-500 mt-1">Silakan masukkan akun Anda untuk mulai mengelola pengiriman.</p>
             </div>
 
-            {/* Quick Demo Account Selector */}
-            <div className="mb-5 rounded-xl border border-primary/15 bg-primary/5 p-3.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-primary mb-2">
-                <Sparkles className="size-3.5" />
-                <span>Akses Cepat Demo Portofolio (Klik untuk Isi Otomatis)</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <button
-                    key={acc.email}
-                    type="button"
-                    onClick={() => applyDemoAccount(acc.email, acc.password)}
-                    className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-left text-xs transition-all ${
-                      fields.email === acc.email
-                        ? "border-primary bg-primary text-white shadow-sm"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-primary/40 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span className="font-bold">{acc.label}</span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-                      fields.email === acc.email ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
-                    }`}>
-                      {acc.badge}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <form className="space-y-4" onSubmit={onSubmit} noValidate>
+            <form className="space-y-4 mt-6" onSubmit={onSubmit} noValidate>
               <div className="space-y-1">
                 <label htmlFor="email" className="block text-sm font-bold text-gray-900 mb-1">Email atau Username</label>
                 <Input
@@ -235,6 +206,28 @@ export default function LoginPage() {
                 {visibleError("password") && <p className="text-sm text-red-500 font-medium">{visibleError("password")}</p>}
               </div>
 
+              {/* Minimalist Quick Login Pills */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-xs text-gray-400 mr-1">Akun demo:</span>
+                {DEMO_ACCOUNTS.map((acc) => {
+                  const isSelected = fields.email === acc.email;
+                  return (
+                    <button
+                      key={acc.email}
+                      type="button"
+                      onClick={() => applyDemoAccount(acc.email, acc.password)}
+                      className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
+                        isSelected
+                          ? "border-primary/30 bg-primary/5 font-semibold text-primary"
+                          : "border-gray-200 bg-gray-50/70 font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-100 hover:text-gray-800"
+                      }`}
+                    >
+                      {acc.label}
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className="pt-2">
                 <Button
                   type="submit"
@@ -268,37 +261,13 @@ export default function LoginPage() {
 
       {/* Mobile Layout */}
       <div className="md:hidden min-h-screen bg-primary flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm flex flex-col relative z-10">
-          <div className="flex flex-col items-center mb-5">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 mb-3">
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm flex flex-col relative z-10">
+          <div className="flex flex-col items-center mb-6">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 mb-4">
               <Package className="size-6 text-primary" strokeWidth={2} />
             </div>
             <h1 className="text-xl font-bold text-primary text-center leading-tight">Sistem Distribusi Paket<br/>Di Perumahan</h1>
-            <p className="text-xs text-gray-500 text-center mt-1.5">Efisiensi pengiriman langsung ke depan pintu Anda.</p>
-          </div>
-
-          {/* Mobile Quick Demo Account Selector */}
-          <div className="mb-4 rounded-xl border border-primary/15 bg-primary/5 p-3">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary mb-2">
-              <Sparkles className="size-3" />
-              <span>Akun Demo (Klik untuk Isi)</span>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {DEMO_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.email}
-                  type="button"
-                  onClick={() => applyDemoAccount(acc.email, acc.password)}
-                  className={`flex items-center justify-between rounded-lg border px-2 py-1.5 text-left text-[11px] transition-all ${
-                    fields.email === acc.email
-                      ? "border-primary bg-primary text-white"
-                      : "border-gray-200 bg-white text-gray-700"
-                  }`}
-                >
-                  <span className="font-bold">{acc.label}</span>
-                </button>
-              ))}
-            </div>
+            <p className="text-xs text-gray-500 text-center mt-2">Efisiensi pengiriman langsung ke depan pintu Anda.</p>
           </div>
 
           <form className="space-y-4 w-full" onSubmit={onSubmit} noValidate>
@@ -344,6 +313,28 @@ export default function LoginPage() {
                 </button>
               </div>
               {visibleError("password") && <p className="text-xs text-red-500 font-medium">{visibleError("password")}</p>}
+            </div>
+
+            {/* Mobile Minimalist Quick Login Pills */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[11px] text-gray-400 mr-0.5">Demo:</span>
+              {DEMO_ACCOUNTS.map((acc) => {
+                const isSelected = fields.email === acc.email;
+                return (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => applyDemoAccount(acc.email, acc.password)}
+                    className={`rounded-md border px-2 py-0.5 text-[11px] transition-colors ${
+                      isSelected
+                        ? "border-primary/30 bg-primary/5 font-semibold text-primary"
+                        : "border-gray-200 bg-gray-50/70 font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {acc.label}
+                  </button>
+                );
+              })}
             </div>
 
             <Button
